@@ -1,17 +1,24 @@
-from .models import NERResult, NERSpan
+from .models import NERResult, NEREntitySpan
 from typing import List
 
 class NEREvaluator:
-    def __init__(self, gold_entity_span_lists: List[List[NERSpan]], pred_entity_span_lists: List[List[NERSpan]]):
+    def __init__(self, gold_entity_span_lists: List[List[NEREntitySpan]], pred_entity_span_lists: List[List[NEREntitySpan]]):
         """
         Constructor for NEREvaluator
 
         Parameters:
-            gold_entity_span_lists (List[List[NERSpan]]): List of lists of spans for the gold entities.
-            pred_entity_span_lists (List[List[NERSpan]]): List of lists of spans for the predicted entities.
+            gold_entity_span_lists (List[List[NEREntitySpan]]): List of gold entity spans lists for different documents.
+            pred_entity_span_lists (List[List[NEREntitySpan]]): List of predicted entity span list for different documents.
         """
+        if len(gold_entity_span_lists)!=len(pred_entity_span_lists):
+            raise Exception(f'# of documents for which golden tags were provided {len(gold_entity_span_lists)}'
+                            f'!= # of documents for which golden tags were provided {len(pred_entity_span_lists)}')
+        
         self.gold_entity_span_lists = gold_entity_span_lists
         self.pred_entity_span_lists = pred_entity_span_lists
+
+        # TODO: check for overlapping spans and throw exceptions
+
         self.unique_gold_tags = list(
             set([span.entity_type 
                     for gold_entity_span_list in gold_entity_span_lists 
@@ -22,6 +29,65 @@ class NEREvaluator:
             tag: NERResult() for tag in self.unique_gold_tags
         }
 
+    def evaluate(self):
+        pass
+
+
+    def calculate_metrics_for_doc(self, gold_entity_spans: List[NEREntitySpan], pred_entity_spans: List[NEREntitySpan]):
+        entity_span_sort_fn = lambda span: (span.start_idx, span.end_idx)
+
+        # sort the entity list so we can make the evaluation faster (O(n)).
+        gold_entity_spans.sort(key=entity_span_sort_fn)
+        pred_entity_spans.sort(key=entity_span_sort_fn)
+
+        # to check if the gold span or pred span was overlapping in last step
+        gold_part_overlap_in_last_step, pred_part_overlap_in_last_step = False, False
+        
+        gold_idx, pred_idx = 0, 0
+        results = NERResult()
+        results_grouped_by_tags = {
+            tag: NERResult() for tag in self.unique_gold_tags
+        }
+
+        while gold_idx<len(gold_entity_spans) and pred_idx<len(pred_entity_spans):
+            if gold_entity_spans[gold_idx] == pred_entity_spans[pred_idx]:
+                # Scenario I: Both entity type/labels and spans match perfectly 
+                # TODO: collect data
+
+                # it is safe to move cursor over
+                # as overlapping spans are not allowed within the predicted entity spans list
+                # and is also not allowed within gold entity span list
+                gold_idx+=1
+                pred_idx+=1
+                
+                gold_part_overlap_in_last_step, pred_part_overlap_in_last_step = False, False
+
+            elif gold_entity_spans[gold_idx].spans_same_tokens_as(pred_entity_spans[pred_idx]):
+                # Scenario IV: Wrong Entity types but, spans match perfectly 
+                # TODO: collect data
+                
+                # it is safe to move cursor over
+                # as overlapping spans are not allowed within the predicted entity spans list
+                # and is also not allowed within gold entity span list
+                gold_idx+=1
+                pred_idx+=1
+                
+                gold_part_overlap_in_last_step, pred_part_overlap_in_last_step = False, False
+
+            elif gold_entity_spans[gold_idx].overlaps_with(pred_entity_spans[pred_idx]):
+                if gold_entity_spans[gold_idx].entity_type == pred_entity_spans[pred_idx].entity_type:
+                    # Scenario V: Correct Entity Type, partial span overlap 
+                    # TODO: collect data
+                    pass
+                else:
+                    # Scenario VI: Wrong Entity Type, partial span overlap
+                    # TODO: collect data
+                    pass
+            else:
+                # Scenarion II or III
+                pass
+            
+
 
 
 
@@ -31,9 +97,9 @@ class NERTagListEvaluator(NEREvaluator):
             Constructor for tag list based evaluator
 
             Parameters:
-                tokens (List[List[str]]): List of lists of tokens.
-                gold_tag_lists (List[List[str]]): List of lists of golden tags.
-                pred_tag_lists (List[List[str]]): List of lists of predicted tags.
+                tokens (List[List[str]]): List of token lists for different documents.
+                gold_tag_lists (List[List[str]]): List of golden tag lists for different documents.
+                pred_tag_lists (List[List[str]]): List of predicted tag lists for different documents.
         """
 
         self.tokens = tokens
@@ -52,9 +118,9 @@ class NERTagListEvaluator(NEREvaluator):
             Create a list of tagged entities with span offsets.
 
             Parameters:
-                tag_list (List[List[str]]): List of lists of tags
+                tag_list (List[List[str]]): List of tag lists for different documents
             Returns:
-                List of different tagged entities with span offsets.
+                List of entity span lists for each document.
         """
         results = []
         start_offset = None
@@ -71,7 +137,7 @@ class NERTagListEvaluator(NEREvaluator):
                     if label is not None and start_offset is not None:
                         end_offset = offset - 1
                         labelled_entities.append(
-                            NERSpan(label, start_offset, end_offset)
+                            NEREntitySpan(label, start_offset, end_offset)
                         )
                         start_offset = None
                         end_offset = None
@@ -87,7 +153,7 @@ class NERTagListEvaluator(NEREvaluator):
 
                     end_offset = offset - 1
                     labelled_entities.append(
-                        NERSpan(label, start_offset, end_offset)
+                        NEREntitySpan(label, start_offset, end_offset)
                     )
 
                     # start of a new label
@@ -97,7 +163,7 @@ class NERTagListEvaluator(NEREvaluator):
 
             if label is not None and start_offset is not None and end_offset is None:
                 labelled_entities.append(
-                    NERSpan(label, start_offset, len(tag_list) - 1)
+                    NEREntitySpan(label, start_offset, len(tag_list) - 1)
                 )
             if len(labelled_entities) > 0:
                 results.append(labelled_entities)

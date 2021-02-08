@@ -25,4 +25,4 @@ def test_ner_taglist_eval_tags_to_span():
     assert pred_spans==expected
 
 if __name__=="__main__":
-    test_evaluator_tags_to_span()
+    test_ner_taglist_eval_tags_to_span()
