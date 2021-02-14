@@ -7,7 +7,7 @@ class NEREvaluator:
         """
         Constructor for NEREvaluator
 
-        Parameters:
+        Args:
             gold_entity_span_lists (List[List[NEREntitySpan]]): List of gold entity spans lists for different documents.
             pred_entity_span_lists (List[List[NEREntitySpan]]): List of predicted entity span list for different documents.
         """
@@ -34,6 +34,12 @@ class NEREvaluator:
         pass
 
     def calculate_metrics_for_doc(self, gold_entity_spans: List[NEREntitySpan], pred_entity_spans: List[NEREntitySpan]):
+        """Calculate the metrics for a particular document.
+
+        Args:
+            gold_entity_spans (List[NEREntitySpan]): [description]
+            pred_entity_spans (List[NEREntitySpan]): [description]
+        """
         def entity_span_sort_fn(span): return (span.start_idx, span.end_idx)
 
         # sort the entity list so we can make the evaluation faster (O(n)).
@@ -182,13 +188,12 @@ class NEREvaluator:
 
 class NERTagListEvaluator(NEREvaluator):
     def __init__(self, tokens: List[List[str]], gold_tag_lists: List[List[str]], pred_tag_lists: List[List[str]]):
-        """
-            Constructor for tag list based evaluator
+        """Constructor for tag list based evaluator
 
-            Parameters:
-                tokens (List[List[str]]): List of token lists for different documents.
-                gold_tag_lists (List[List[str]]): List of golden tag lists for different documents.
-                pred_tag_lists (List[List[str]]): List of predicted tag lists for different documents.
+        Args:
+            tokens (List[List[str]]): List of token lists for different documents.
+            gold_tag_lists (List[List[str]]): List of golden tag lists for different documents.
+            pred_tag_lists (List[List[str]]): List of predicted tag lists for different documents.
         """
 
         self.tokens = tokens
