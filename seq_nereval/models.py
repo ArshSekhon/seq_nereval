@@ -75,12 +75,12 @@ class NERResult:
         self.partial_match = deepcopy(self.__metrics_template)
         self.bounds_match = deepcopy(self.__metrics_template)
 
-        self.result_schemes = [
-            self.strict_match,
-            self.type_match,
-            self.partial_match,
-            self.bounds_match
-        ]
+        self.result_schemes_map = {
+            "strict_match": self.strict_match,
+            "type_match": self.type_match,
+            "partial_match": self.partial_match,
+            "bounds_match": self.bounds_match
+        }
 
         self.type_match_span_match: List[Tuple[NEREntitySpan, NEREntitySpan]] = []
         self.unecessary_predicted_entity: List[NEREntitySpan] = []
@@ -89,15 +89,33 @@ class NERResult:
         self.type_match_span_partial: List[Tuple[NEREntitySpan, NEREntitySpan]] = []
         self.type_mismatch_span_partial: List[Tuple[NEREntitySpan, NEREntitySpan]] = []
 
-        self.result_scenarios = [
-            self.type_match_span_match,
-            self.unecessary_predicted_entity,
-            self.missed_gold_entity,
-            self.type_mismatch_span_match,
-            self.type_match_span_partial,
-            self.type_mismatch_span_partial
-        ]
+        self.result_scenarios = {
+            "type_match_span_match": self.type_match_span_match,
+            "unecessary_predicted_entity": self.unecessary_predicted_entity,
+            "missed_gold_entities": self.missed_gold_entity,
+            "type_mismatch_span_match": self.type_mismatch_span_match,
+            "type_match_span_partial": self.type_match_span_partial,
+            "type_mismatch_span_partial": self.type_mismatch_span_partial
+        }
+    
 
+    def append_results(self, otherResults):
+        
+        for result_scheme_key in self.result_schemes_map.keys():
+            for metric_key in self.result_schemes_map[result_scheme_key].keys():
+                ownMetric = self.result_schemes_map[result_scheme_key][metric_key]
+                otherResultMetric = otherResults.result_schemes_map[result_scheme_key][metric_key]
+
+                if type(ownMetric) is list and type(otherResultMetric) is list:
+                    ownMetric.extend(otherResultMetric)
+
+                if type(ownMetric) is int and type(otherResultMetric) is int:
+                    ownMetric += otherResultMetric
+
+        for key in self.result_scenarios.keys():
+            self.result_scenarios[key].extend(otherResults.result_scenarios[key])
+
+        self.__update_metrics()
 
     # Scenario I
     def add_type_match_span_match(self, gold_entity: NEREntitySpan, pred_entity: NEREntitySpan):
@@ -115,10 +133,10 @@ class NERResult:
     def add_unecessary_predicted_entity(self, uncessary_pred_entity: NEREntitySpan):
         self.unecessary_predicted_entity.append(uncessary_pred_entity)
 
-        self.strict_match["spurious"].append((gold_entity,pred_entity))
-        self.type_match["spurious"].append((gold_entity,pred_entity))
-        self.partial_match["spurious"].append((gold_entity,pred_entity))
-        self.bounds_match["spurious"].append((gold_entity,pred_entity))
+        self.strict_match["spurious"].append(uncessary_pred_entity)
+        self.type_match["spurious"].append(uncessary_pred_entity)
+        self.partial_match["spurious"].append(uncessary_pred_entity)
+        self.bounds_match["spurious"].append(uncessary_pred_entity)
 
         self.__update_metrics()
 
@@ -126,10 +144,10 @@ class NERResult:
     def add_missed_gold_entity(self, missed_gold_entity: NEREntitySpan):
         self.missed_gold_entity.append(missed_gold_entity)
 
-        self.strict_match["missed"].append((gold_entity,pred_entity))
-        self.type_match["missed"].append((gold_entity,pred_entity))
-        self.partial_match["missed"].append((gold_entity,pred_entity))
-        self.bounds_match["missed"].append((gold_entity,pred_entity))
+        self.strict_match["missed"].append(missed_gold_entity)
+        self.type_match["missed"].append(missed_gold_entity)
+        self.partial_match["missed"].append(missed_gold_entity)
+        self.bounds_match["missed"].append(missed_gold_entity)
 
         self.__update_metrics()
 
@@ -168,8 +186,7 @@ class NERResult:
         
 
     def __update_metrics(self):
-        
-        for result_scheme in self.result_schemes:
+        for result_scheme in self.result_schemes_map.values():
             self.__compute_actual_possible(result_scheme)
             self.__compute_precision_recall(result_scheme)
         
@@ -193,8 +210,8 @@ class NERResult:
     def __compute_precision_recall(self, results, partial_or_type=False):
         actual = results["actual"]
         possible = results["possible"]
-        partial = results["partial"]
-        correct = results["correct"]
+        partial = len(results["partial"])
+        correct = len(results["correct"])
 
         if partial_or_type:
             precision = (correct + 0.5 * partial) / actual if actual > 0 else 0
