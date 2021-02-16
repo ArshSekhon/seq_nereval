@@ -2,6 +2,9 @@ from seq_nereval.models import NEREntitySpan
 import random
 from typing import List
 
+def generate_random_entity_span(token_placeholder: str):
+    return NEREntitySpan(token_placeholder, random.randint(
+            1, 100), random.randint(1, 100))
 
 def generate_random_span_list(token_placeholder: str, count: int) -> List:
     return [

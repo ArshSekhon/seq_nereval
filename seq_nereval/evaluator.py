@@ -35,10 +35,11 @@ class NEREvaluator:
         results = NERResultAggregator()
 
         for gold_spans, pred_spans in zip(self.gold_entity_span_lists, self.pred_entity_span_lists):
-            results_for_curr_doc = self.calculate_metrics_for_doc(gold_spans, pred_spans)
+            results_for_curr_doc = self.calculate_metrics_for_doc(
+                gold_spans, pred_spans)
             results_by_doc.append(results_for_curr_doc)
-            results.append_results_aggregator(results_for_curr_doc[0])
-        
+            results.append_result_aggregator(results_for_curr_doc[0])
+
         return results, results_for_curr_doc
 
     def calculate_metrics_for_doc(self, gold_entity_spans: List[NEREntitySpan], pred_entity_spans: List[NEREntitySpan]):
@@ -190,7 +191,7 @@ class NEREvaluator:
             )
 
             pred_idx += 1
-        
+
         return results, results_grouped_by_tags
 
 
@@ -209,13 +210,13 @@ class NERTagListEvaluator(NEREvaluator):
         self.pred_tag_lists = pred_tag_lists
 
         gold_entity_spans = self.__tagged_list_to_span(
-            self.gold_tag_lists)
+            self.gold_tag_lists, self.tokens)
         pred_entity_spans = self.__tagged_list_to_span(
-            self.pred_tag_lists)
+            self.pred_tag_lists, self.tokens)
 
         super().__init__(gold_entity_spans, pred_entity_spans)
 
-    def __tagged_list_to_span(self, tag_lists: List[List[str]]):
+    def __tagged_list_to_span(self, tag_lists: List[List[str]], token_lists: List[List[str]]):
         """
             Create a list of tagged entities with span offsets.
 
@@ -228,45 +229,76 @@ class NERTagListEvaluator(NEREvaluator):
         start_offset = None
         end_offset = None
         label = None
+        valid_token_tag_prefix = ('B', 'I', 'L', 'O', 'U')
 
-        for tag_list in tag_lists:
+        if len(tag_lists) != len(token_lists):
+            raise Exception(
+                'Exception: Number of tags lists and tokens lists are not the same.')
+
+        for tag_list, token_list in zip(tag_lists, token_lists):
+            # reset everything
             labelled_entities = []
-            for offset, token_tag in enumerate(tag_list):
+            tokens_in_current_entity = []
 
+            start_offset = None
+            end_offset = None
+            label = None
+
+            if len(tag_list) != len(token_list):
+                raise Exception(
+                    f'Exception: Number of tags and tokens are not the same.'
+                    f'Tag List:{tag_list} Token List: {token_list}'
+                )
+
+            for offset, (token_tag, token) in enumerate(zip(tag_list, token_list)):
                 if token_tag == "O":
                     # if a sequence of non-"O" tags was seen last and
                     # a "O" tag is encountered => Label has ended.
                     if label is not None and start_offset is not None:
                         end_offset = offset - 1
                         labelled_entities.append(
-                            NEREntitySpan(label, start_offset, end_offset)
+                            NEREntitySpan(label, start_offset,
+                                          end_offset, tokens_in_current_entity)
                         )
+                        tokens_in_current_entity = []
                         start_offset = None
                         end_offset = None
                         label = None
                 # if a non-"O" tag is encoutered => new label has started
-                elif label is None:
+                elif label is None and token_tag.startswith(valid_token_tag_prefix):
                     label = token_tag[2:]
                     start_offset = offset
+                    tokens_in_current_entity.append(token)
                 # if another label begins => last labelled seq has ended
-                elif label != token_tag[2:] or (
-                    label == token_tag[2:] and token_tag[:1] == "B"
+                elif (label != token_tag[2:] and token_tag.startswith(valid_token_tag_prefix)) or (
+                    label == token_tag[2:] and (
+                        token_tag[:1] == "B" or token_tag[:1] == "U")
                 ):
 
                     end_offset = offset - 1
                     labelled_entities.append(
-                        NEREntitySpan(label, start_offset, end_offset)
+                        NEREntitySpan(label, start_offset,
+                                      end_offset, tokens_in_current_entity)
                     )
+                    tokens_in_current_entity = []
 
                     # start of a new label
                     label = token_tag[2:]
                     start_offset = offset
                     end_offset = None
+                    tokens_in_current_entity.append(token)
+                elif label == token_tag[2:]:
+                    tokens_in_current_entity.append(token)
+                elif not token_tag.startswith(valid_token_tag_prefix):
+                    raise Exception(f'Unknown Token Tag: {token_tag}')
 
             if label is not None and start_offset is not None and end_offset is None:
                 labelled_entities.append(
-                    NEREntitySpan(label, start_offset, len(tag_list) - 1)
+                    NEREntitySpan(label, start_offset, len(
+                        tag_list) - 1, tokens_in_current_entity)
                 )
+                tokens_in_current_entity = []
+
             if len(labelled_entities) > 0:
                 results.append(labelled_entities)
                 labelled_entities = []

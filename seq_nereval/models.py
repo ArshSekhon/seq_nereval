@@ -4,7 +4,7 @@ from typing import List, Tuple, Dict
 
 
 class NEREntitySpan:
-    def __init__(self, entity_type: str, start_idx: int, end_idx: int):
+    def __init__(self, entity_type: str, start_idx: int, end_idx: int, tokens_spanned: List[str] = []):
         """
         Constructor for NEREntitySpan
 
@@ -13,15 +13,19 @@ class NEREntitySpan:
             start_idx (int): index of the first token that is a part of the entity.
             end_idx (int): index of the last token that is a part of the entity.
         """
+
         self.entity_type = entity_type
         self.start_idx = start_idx
         self.end_idx = end_idx
+        self.tokens_spanned = tokens_spanned
 
     def __str__(self):
-        return f'"{self.entity_type}" ({self.start_idx}, {self.end_idx})'
+        return (f'Entity Type: "{self.entity_type}", Span:({self.start_idx},'
+                f' {self.end_idx}), Tokens:{self.tokens_spanned}')
 
     def __repr__(self):
-        return f'"{self.entity_type}" ({self.start_idx}, {self.end_idx})'
+        return (f'Entity Type: "{self.entity_type}", Span:({self.start_idx},'
+                f' {self.end_idx}), Tokens:{self.tokens_spanned}')
 
     def __hash__(self):
         return hash(f'{self.entity_type}-{self.start_idx}-{self.end_idx}')
@@ -40,6 +44,7 @@ class NEREntitySpan:
         Returns:
             'True' if they both span the same tokens, else 'False'
         """
+
         return (self.start_idx == otherEntity.start_idx and self.end_idx == otherEntity.end_idx)
 
     def overlaps_with(self, otherEntity) -> bool:
@@ -51,6 +56,7 @@ class NEREntitySpan:
         Returns:
             'True' if there is an overlap, else 'False'
         """
+
         return max(self.start_idx, otherEntity.start_idx) <= min(self.end_idx, otherEntity.end_idx)
 
 
@@ -94,6 +100,7 @@ class NERResultAggregator:
         Args:
             otherResults (NERResult): Result to be appended.
         """
+
         for ownResultScheme, otherResultScheme in zip(
             [self.strict_match, self.type_match,
                 self.partial_match, self.bounds_match],
@@ -126,6 +133,7 @@ class NERResultAggregator:
             gold_entity (NEREntitySpan): Golden Entity Span.
             pred_entity (NEREntitySpan): Predicted Entity Span.
         """
+
         self.type_match_span_match.append((gold_entity, pred_entity))
 
         self.strict_match["correct"].append((gold_entity, pred_entity))
@@ -144,6 +152,7 @@ class NERResultAggregator:
         Args:
             uncessary_pred_entity (NEREntitySpan): Entity span that was wrongly predicted.
         """
+
         self.unecessary_predicted_entity.append(uncessary_pred_entity)
 
         self.strict_match["spurious"].append(uncessary_pred_entity)
@@ -161,6 +170,7 @@ class NERResultAggregator:
         Args:
             missed_gold_entity (NEREntitySpan): Entity span that wasn't predicted.
         """
+
         self.missed_gold_entity.append(missed_gold_entity)
 
         self.strict_match["missed"].append(missed_gold_entity)
@@ -181,6 +191,7 @@ class NERResultAggregator:
             pred_entity (NEREntitySpan): Predicted Entity span for which span was correct
                                             but the type was not.
         """
+
         self.type_mismatch_span_match.append((gold_entity, pred_entity))
 
         self.strict_match["incorrect"].append((gold_entity, pred_entity))
@@ -201,6 +212,7 @@ class NERResultAggregator:
             pred_entity (NEREntitySpan): Predicted Entity span for which span was correct but the 
                 type was not.
         """
+
         self.type_match_span_partial.append((gold_entity, pred_entity))
 
         self.strict_match["incorrect"].append((gold_entity, pred_entity))
@@ -229,13 +241,14 @@ class NERResultAggregator:
 
         self.refresh_metrics()
 
-    def refresh_metrics(self):
+    def refresh_metrics(self, partial_or_type=False):
         """Recalculates the metrics for the results aggregator.
         """
+
         for result_scheme in [self.strict_match, self.type_match,
                               self.partial_match, self.bounds_match]:
             self.__compute_actual_possible(result_scheme)
-            self.__compute_precision_recall(result_scheme)
+            self.__compute_precision_recall(result_scheme, partial_or_type)
 
     def __compute_actual_possible(self, results):
         """Calculates the number of the actual and possible 
@@ -246,6 +259,7 @@ class NERResultAggregator:
         Returns:
             result dictionary with updated values of actual and possible counts.
         """
+
         correct = len(results["correct"])
         incorrect = len(results["incorrect"])
         partial = len(results["partial"])
