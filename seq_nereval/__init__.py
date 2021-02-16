@@ -1,2 +1,2 @@
-from .models import NERResult, NEREntitySpan
+from .models import NERResultAggregator, NEREntitySpan
 from .evaluator import NEREvaluator, NERTagListEvaluator

@@ -1,4 +1,4 @@
-from .models import NERResult, NEREntitySpan
+from .models import NERResultAggregator, NEREntitySpan
 from typing import List
 
 
@@ -25,19 +25,19 @@ class NEREvaluator:
                  for gold_entity_span_list in gold_entity_span_lists
                  for span in gold_entity_span_list]))
 
-        self.results = NERResult()
+        self.results = NERResultAggregator()
         self.results_grouped_by_tags = {
-            tag: NERResult() for tag in self.unique_gold_tags
+            tag: NERResultAggregator() for tag in self.unique_gold_tags
         }
 
     def evaluate(self):
         results_by_doc = []
-        results = NERResult()
+        results = NERResultAggregator()
 
         for gold_spans, pred_spans in zip(self.gold_entity_span_lists, self.pred_entity_span_lists):
             results_for_curr_doc = self.calculate_metrics_for_doc(gold_spans, pred_spans)
             results_by_doc.append(results_for_curr_doc)
-            results.append_results(results_for_curr_doc[0])
+            results.append_results_aggregator(results_for_curr_doc[0])
         
         return results, results_for_curr_doc
 
@@ -58,9 +58,9 @@ class NEREvaluator:
         gold_part_overlap_in_last_step, pred_part_overlap_in_last_step = False, False
 
         gold_idx, pred_idx = 0, 0
-        results = NERResult()
+        results = NERResultAggregator()
         results_grouped_by_tags = {
-            tag: NERResult() for tag in self.unique_gold_tags
+            tag: NERResultAggregator() for tag in self.unique_gold_tags
         }
 
         while gold_idx < len(gold_entity_spans) and pred_idx < len(pred_entity_spans):
