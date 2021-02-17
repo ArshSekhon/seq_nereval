@@ -1,4 +1,4 @@
-from seq_nereval.models import NEREntitySpan
+from seqnereval.models import NEREntitySpan
 import random
 from typing import List
 

@@ -1,4 +1,4 @@
-from seq_nereval.models import NEREntitySpan, NERResultAggregator
+from seqnereval.models import NEREntitySpan, NERResultAggregator
 import random
 from typing import List
 from pytest_mock import MockerFixture

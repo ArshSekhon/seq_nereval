@@ -1,4 +1,4 @@
-from seq_nereval import NERTagListEvaluator, NEREvaluator, NEREntitySpan
+from seqnereval import NERTagListEvaluator, NEREvaluator, NEREntitySpan
 import pytest
 import json
 
