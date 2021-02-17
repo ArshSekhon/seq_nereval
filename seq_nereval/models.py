@@ -24,8 +24,10 @@ class NEREntitySpan:
                 f' {self.end_idx}), Tokens:{self.tokens_spanned}')
 
     def __repr__(self):
-        return (f'Entity Type: "{self.entity_type}", Span:({self.start_idx},'
-                f' {self.end_idx}), Tokens:{self.tokens_spanned}')
+        # return (f'Entity Type: "{self.entity_type}", Span:({self.start_idx},'
+        #         f' {self.end_idx}), Tokens:{self.tokens_spanned}')
+        return (f'NEREntitySpan("{self.entity_type}", {self.start_idx},'
+                f' {self.end_idx})')
 
     def __hash__(self):
         return hash(f'{self.entity_type}-{self.start_idx}-{self.end_idx}')
@@ -71,8 +73,8 @@ class NERResultAggregator:
             "partial": [],
             "missed": [],
             "spurious": [],
-            "possible": [],
-            "actual": [],
+            "possible": 0,
+            "actual": 0,
             "precision": 0,
             "recall": 0,
             "f1": 0,
@@ -241,14 +243,17 @@ class NERResultAggregator:
 
         self.refresh_metrics()
 
-    def refresh_metrics(self, partial_or_type=False):
+    def refresh_metrics(self):
         """Recalculates the metrics for the results aggregator.
         """
 
-        for result_scheme in [self.strict_match, self.type_match,
-                              self.partial_match, self.bounds_match]:
+        for result_scheme in [self.strict_match, self.bounds_match]:
             self.__compute_actual_possible(result_scheme)
-            self.__compute_precision_recall(result_scheme, partial_or_type)
+            self.__compute_precision_recall(result_scheme, False)
+
+        for result_scheme in [self.type_match, self.partial_match]:
+            self.__compute_actual_possible(result_scheme)
+            self.__compute_precision_recall(result_scheme, True)
 
     def __compute_actual_possible(self, results):
         """Calculates the number of the actual and possible 

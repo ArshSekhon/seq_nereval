@@ -1,4 +1,5 @@
 from .models import NERResultAggregator, NEREntitySpan
+from collections import defaultdict
 from typing import List
 
 
@@ -26,9 +27,7 @@ class NEREvaluator:
                  for span in gold_entity_span_list]))
 
         self.results = NERResultAggregator()
-        self.results_grouped_by_tags = {
-            tag: NERResultAggregator() for tag in self.unique_gold_tags
-        }
+        self.results_grouped_by_tags = defaultdict(lambda: NERResultAggregator())
 
     def evaluate(self):
         results_by_doc = []
@@ -60,9 +59,7 @@ class NEREvaluator:
 
         gold_idx, pred_idx = 0, 0
         results = NERResultAggregator()
-        results_grouped_by_tags = {
-            tag: NERResultAggregator() for tag in self.unique_gold_tags
-        }
+        results_grouped_by_tags = defaultdict(lambda: NERResultAggregator())
 
         while gold_idx < len(gold_entity_spans) and pred_idx < len(pred_entity_spans):
             if gold_entity_spans[gold_idx] == pred_entity_spans[pred_idx]:
@@ -168,6 +165,9 @@ class NEREvaluator:
                     pred_idx += 1
                     pred_part_overlap_in_last_step = True
 
+        if gold_part_overlap_in_last_step: 
+            gold_idx+=1
+        
         while gold_idx < len(gold_entity_spans):
             # Scenario III: missed entity
             results.add_missed_gold_entity(
@@ -180,6 +180,8 @@ class NEREvaluator:
 
             gold_idx += 1
 
+        if pred_part_overlap_in_last_step: 
+            pred_idx+=1
         while pred_idx < len(pred_entity_spans):
             # Scenario II: hypothesised entity incorrect
             results.add_unecessary_predicted_entity(
