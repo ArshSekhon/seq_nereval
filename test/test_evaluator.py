@@ -19,23 +19,23 @@ def test_ner_taglist_eval_tags_to_span():
 
     expected = [
         [
-            {"tokens_spanned": ['John', 'Doe\'s'],
+            {"tokens_spanned": ['John', 'Doe\'s'], "span_context": ['John', 'Doe\'s'],
                 "entity_type": "PER", "start_idx": 1, "end_idx": 2},
-            {"tokens_spanned": ['Basketball', 'Club'],
+            {"tokens_spanned": ['Basketball', 'Club'], "span_context": ['Basketball', 'Club'],
                 "entity_type": "ORG", "start_idx": 3, "end_idx": 4},
         ],
         [
-            {"tokens_spanned": ['Canada', 'Place'],
+            {"tokens_spanned": ['Canada', 'Place'], "span_context": ['Canada', 'Place'],
                 "entity_type": "LOC", "start_idx": 1, "end_idx": 2},
         ],
         [
-            {'tokens_spanned': ['John'], 'entity_type': 'PER', 'start_idx': 1,
+            {'tokens_spanned': ['John'], 'span_context': ['John'], 'entity_type': 'PER', 'start_idx': 1,
              'end_idx': 1}
         ],
         [
-            {'tokens_spanned': ['John', 'Doe'],
+            {'tokens_spanned': ['John', 'Doe'], 'span_context': ['John', 'Doe'],
                 'entity_type': 'PER', 'start_idx': 0, 'end_idx': 1},
-            {'tokens_spanned': ['Jenny', 'Doe'],
+            {'tokens_spanned': ['Jenny', 'Doe'], 'span_context': ['Jenny', 'Doe'],
                 'entity_type': 'PER', 'start_idx': 2, 'end_idx': 3}
         ]
     ]
@@ -57,6 +57,40 @@ def test_ner_taglist_eval_tags_to_span():
     with pytest.raises(Exception):
         NERTagListEvaluator([['X', 'X'], ['X', 'X']], [
                             ['O', 'O']], [['O', 'O']])
+
+
+def test_ner_taglist_eval_tags_to_span_check_span_context():
+    tokens = [
+        ['The', 'John', 'Doe\'s', 'Basketball', 'Club'],
+        ['The', 'Canada', 'Place', 'is', 'best', '.'],
+    ]
+    before = [
+        ["O", "B-PER", "I-PER", "B-ORG", "I-ORG"],
+        ["O", "B-LOC", "I-LOC", "O", "O", "O"],
+    ]
+
+    expected = [
+        [
+            {"tokens_spanned": ['John', 'Doe\'s'], "span_context": ['The', 'John', 'Doe\'s', 'Basketball', 'Club'],
+                "entity_type": "PER", "start_idx": 1, "end_idx": 2},
+            {"tokens_spanned": ['Basketball', 'Club'], "span_context": ['John', 'Doe\'s', 'Basketball', 'Club'],
+                "entity_type": "ORG", "start_idx": 3, "end_idx": 4},
+        ],
+        [
+            {"tokens_spanned": ['Canada', 'Place'], "span_context": ['The', 'Canada', 'Place', 'is', 'best'],
+                "entity_type": "LOC", "start_idx": 1, "end_idx": 2},
+        ]
+    ]
+    evaluator = NERTagListEvaluator(tokens, before, before,2)
+    gold_spans = [[span.__dict__ for span in span_list]
+                  for span_list in evaluator.gold_entity_span_lists]
+    pred_spans = [[span.__dict__ for span in span_list]
+                  for span_list in evaluator.pred_entity_span_lists]
+
+    # print(gold_spans)
+    # print(pred_spans)
+    assert gold_spans == expected
+    assert pred_spans == expected
 
 
 def test_ner_evaluate_missed_entity():
@@ -479,5 +513,3 @@ def test_ner_evaluator_type_mismatch_span_partial():
         "recall": 0,
         "f1": 0,
     }
-
-

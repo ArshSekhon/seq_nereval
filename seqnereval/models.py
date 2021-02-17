@@ -4,7 +4,7 @@ from typing import List, Tuple, Dict
 
 
 class NEREntitySpan:
-    def __init__(self, entity_type: str, start_idx: int, end_idx: int, tokens_spanned: List[str] = []):
+    def __init__(self, entity_type: str, start_idx: int, end_idx: int, tokens_spanned: List[str] = [], span_context=None):
         """
         Constructor for NEREntitySpan
 
@@ -18,6 +18,10 @@ class NEREntitySpan:
         self.start_idx = start_idx
         self.end_idx = end_idx
         self.tokens_spanned = tokens_spanned
+        if span_context == None:
+            self.span_context = self.tokens_spanned
+        else:
+            self.span_context = span_context
 
     def __str__(self):
         return (f'Entity Type: "{self.entity_type}", Span:({self.start_idx},'

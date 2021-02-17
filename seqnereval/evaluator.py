@@ -27,7 +27,8 @@ class NEREvaluator:
                  for span in gold_entity_span_list]))
 
         self.results = NERResultAggregator()
-        self.results_grouped_by_tags = defaultdict(lambda: NERResultAggregator())
+        self.results_grouped_by_tags = defaultdict(
+            lambda: NERResultAggregator())
 
     def evaluate(self):
         results_by_doc = []
@@ -165,9 +166,9 @@ class NEREvaluator:
                     pred_idx += 1
                     pred_part_overlap_in_last_step = True
 
-        if gold_part_overlap_in_last_step: 
-            gold_idx+=1
-        
+        if gold_part_overlap_in_last_step:
+            gold_idx += 1
+
         while gold_idx < len(gold_entity_spans):
             # Scenario III: missed entity
             results.add_missed_gold_entity(
@@ -180,8 +181,8 @@ class NEREvaluator:
 
             gold_idx += 1
 
-        if pred_part_overlap_in_last_step: 
-            pred_idx+=1
+        if pred_part_overlap_in_last_step:
+            pred_idx += 1
         while pred_idx < len(pred_entity_spans):
             # Scenario II: hypothesised entity incorrect
             results.add_unecessary_predicted_entity(
@@ -198,7 +199,7 @@ class NEREvaluator:
 
 
 class NERTagListEvaluator(NEREvaluator):
-    def __init__(self, tokens: List[List[str]], gold_tag_lists: List[List[str]], pred_tag_lists: List[List[str]]):
+    def __init__(self, tokens: List[List[str]], gold_tag_lists: List[List[str]], pred_tag_lists: List[List[str]], entity_context_padding=0):
         """Constructor for tag list based evaluator
 
         Args:
@@ -210,6 +211,7 @@ class NERTagListEvaluator(NEREvaluator):
         self.tokens = tokens
         self.gold_tag_lists = gold_tag_lists
         self.pred_tag_lists = pred_tag_lists
+        self.entity_context_padding = entity_context_padding
 
         gold_entity_spans = self.__tagged_list_to_span(
             self.gold_tag_lists, self.tokens)
@@ -233,6 +235,11 @@ class NERTagListEvaluator(NEREvaluator):
         label = None
         valid_token_tag_prefix = ('B', 'I', 'L', 'O', 'U')
 
+        def get_context_tokens(token_list, start_offset, end_offset): return (
+            token_list[max(0, start_offset-self.entity_context_padding):
+                        min(end_offset+self.entity_context_padding+1, len(token_list))]
+        )
+
         if len(tag_lists) != len(token_lists):
             raise Exception(
                 'Exception: Number of tags lists and tokens lists are not the same.')
@@ -240,7 +247,6 @@ class NERTagListEvaluator(NEREvaluator):
         for tag_list, token_list in zip(tag_lists, token_lists):
             # reset everything
             labelled_entities = []
-            tokens_in_current_entity = []
 
             start_offset = None
             end_offset = None
@@ -260,9 +266,9 @@ class NERTagListEvaluator(NEREvaluator):
                         end_offset = offset - 1
                         labelled_entities.append(
                             NEREntitySpan(label, start_offset,
-                                          end_offset, tokens_in_current_entity)
+                                          end_offset, token_list[start_offset:end_offset+1], 
+                                          get_context_tokens(token_list, start_offset, end_offset))
                         )
-                        tokens_in_current_entity = []
                         start_offset = None
                         end_offset = None
                         label = None
@@ -270,7 +276,6 @@ class NERTagListEvaluator(NEREvaluator):
                 elif label is None and token_tag.startswith(valid_token_tag_prefix):
                     label = token_tag[2:]
                     start_offset = offset
-                    tokens_in_current_entity.append(token)
                 # if another label begins => last labelled seq has ended
                 elif (label != token_tag[2:] and token_tag.startswith(valid_token_tag_prefix)) or (
                     label == token_tag[2:] and (
@@ -280,26 +285,23 @@ class NERTagListEvaluator(NEREvaluator):
                     end_offset = offset - 1
                     labelled_entities.append(
                         NEREntitySpan(label, start_offset,
-                                      end_offset, tokens_in_current_entity)
+                                      end_offset, token_list[start_offset:end_offset+1], 
+                                      get_context_tokens(token_list, start_offset, end_offset))
                     )
-                    tokens_in_current_entity = []
 
                     # start of a new label
                     label = token_tag[2:]
                     start_offset = offset
                     end_offset = None
-                    tokens_in_current_entity.append(token)
-                elif label == token_tag[2:]:
-                    tokens_in_current_entity.append(token)
                 elif not token_tag.startswith(valid_token_tag_prefix):
                     raise Exception(f'Unknown Token Tag: {token_tag}')
 
             if label is not None and start_offset is not None and end_offset is None:
+                end_offset = len(tag_list) - 1
                 labelled_entities.append(
-                    NEREntitySpan(label, start_offset, len(
-                        tag_list) - 1, tokens_in_current_entity)
+                    NEREntitySpan(label, start_offset, end_offset, token_list[start_offset:end_offset+1], 
+                    get_context_tokens(token_list, start_offset, end_offset))
                 )
-                tokens_in_current_entity = []
 
             if len(labelled_entities) > 0:
                 results.append(labelled_entities)
