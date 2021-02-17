@@ -28,10 +28,8 @@ class NEREntitySpan:
                 f' {self.end_idx}), Tokens:{self.tokens_spanned}')
 
     def __repr__(self):
-        # return (f'Entity Type: "{self.entity_type}", Span:({self.start_idx},'
-        #         f' {self.end_idx}), Tokens:{self.tokens_spanned}')
-        return (f'NEREntitySpan("{self.entity_type}", {self.start_idx},'
-                f' {self.end_idx})')
+        return (f'Entity Type: "{self.entity_type}", Span:({self.start_idx},'
+                f' {self.end_idx}), Tokens:{self.tokens_spanned}')
 
     def __hash__(self):
         return hash(f'{self.entity_type}-{self.start_idx}-{self.end_idx}')
