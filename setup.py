@@ -29,15 +29,12 @@ setup(
     author=about["__author__"],
     author_email=about["__author_email__"],
     license=about["__license__"],
-    packages=["pubtator_loader"],
+    packages=["seqnereval"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
     ],
     tests_require=["pytest"],
-    install_requires=[
-        'spacy',
-    ],
     include_package_data=True,
     zip_safe=True,
 )

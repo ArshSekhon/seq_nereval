@@ -7,7 +7,7 @@ Example:
 """
 __name__ = "seqnereval"
 __version__ = "0.1.0"
-__description__ = "Parse PubTator files with ease"
+__description__ = "Evaluate NER models with ease."
 __url__ = "https://github.com/arshsekhon/seqnereval"
 __author__ = "Arsh Sekhon"
 __author_email__ = "arshs3khon@gmail.com"
