@@ -59,7 +59,6 @@ def test_ner_taglist_eval_tags_to_span():
         NERTagListEvaluator([['X', 'X'], ['X', 'X']], [
                             ['O', 'O']], [['O', 'O']])
 
-
 def test_ner_taglist_eval_tags_to_span_check_span_context():
     tokens = [
         ['The', 'John', 'Doe\'s', 'Basketball', 'Club'],
@@ -372,7 +371,6 @@ def test_ner_evaluator_type_match_span_overlap():
         "f1": 0,
     }
 
-
 def test_ner_evaluator_type_mismatch_span_exact():
     predicted_entities = [
         [
@@ -440,7 +438,6 @@ def test_ner_evaluator_type_mismatch_span_exact():
         "f1": 1,
     }
 
-
 def test_ner_evaluator_type_mismatch_span_partial():
     predicted_entities = [
         [
@@ -507,3 +504,71 @@ def test_ner_evaluator_type_mismatch_span_partial():
         "recall": 0,
         "f1": 0,
     }
+
+def test_ner_evaluator_summarize_results():
+    predicted_entities = [
+        [
+            NEREntitySpan("PER", 24, 30),
+        ]
+    ]
+    gold_entities = [
+        [
+            NEREntitySpan("LOC", 21, 26),
+        ]
+    ]
+
+    evaluator = NEREvaluator(gold_entities, predicted_entities)
+    res, _ = evaluator.evaluate()
+
+    res.summarize_result() == {
+    "strict_match": {
+        "correct": 0,
+        "incorrect": 1,
+        "partial": 0,
+        "missed": 0,
+        "spurious": 0,
+        "possible": 1,
+        "actual": 1,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+    },
+
+    "type_match": {
+        "correct": 0,
+        "incorrect": 1,
+        "partial": 0,
+        "missed": 0,
+        "spurious": 0,
+        "possible": 1,
+        "actual": 1,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+    },
+
+    "partial_match": {
+        "correct": 0,
+        "incorrect": 0,
+        "partial": 1,
+        "missed": 0,
+        "spurious": 0,
+        "possible": 1,
+        "actual": 1,
+        "precision": 0.5,
+        "recall": 0.5,
+        "f1": 0.5,
+    },
+
+    "bounds_match": {
+        "correct": 0,
+        "incorrect": 1,
+        "partial": 0,
+        "missed": 0,
+        "spurious": 0,
+        "possible": 1,
+        "actual": 1,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+    }}
