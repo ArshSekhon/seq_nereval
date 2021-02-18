@@ -302,4 +302,4 @@ ACTUAL (ACT) = COR + INC + PAR + SPU = TP + FP
 
 
 ## References
-It draws heavily on [Segura-bedmar, I., & Mart, P. (2013). 2013 SemEval-2013 Task 9 Extraction of Drug-Drug Interactions from. Semeval](https://www.aclweb.org/anthology/S13-2056), 2(DDIExtraction), 341–350.  It was inspired by [nerevaluate](https://github.com/ivyleavedtoadflax/nervaluate) and is designed to be significantly faster, easier to understand/extend and provide more granular insights on the nature of errors made by the model.
+`seqnereval` draws heavily on [Segura-bedmar, I., & Mart, P. (2013). 2013 SemEval-2013 Task 9 Extraction of Drug-Drug Interactions from. Semeval](https://www.aclweb.org/anthology/S13-2056), 2(DDIExtraction), 341–350.  It was inspired by [nerevaluate](https://github.com/ivyleavedtoadflax/nervaluate) and is designed to be significantly faster, easier to understand/extend and provide more granular insights on the nature of errors made by the model.
