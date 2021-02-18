@@ -23,12 +23,12 @@ class NEREntitySpan:
             self.span_context = span_context
 
     def __str__(self):
-        return (f'Entity Type: "{self.entity_type}", Token Span IDX:({self.start_idx},'
-                f' {self.end_idx}), Tokens:{self.tokens_spanned}, Context:{self.span_context}')
+        return (f'(Entity Type: "{self.entity_type}", Token Span IDX:({self.start_idx},'
+                f' {self.end_idx}), Tokens:{self.tokens_spanned}, Context:{self.span_context})')
 
     def __repr__(self):
-        return (f'Entity Type: "{self.entity_type}", Token Span IDX:({self.start_idx},'
-                f' {self.end_idx}), Tokens:{self.tokens_spanned}, Context:{self.span_context}')
+        return (f'(Entity Type: "{self.entity_type}", Token Span IDX:({self.start_idx},'
+                f' {self.end_idx}), Tokens:{self.tokens_spanned}, Context:{self.span_context})')
 
     def __hash__(self):
         return hash(f'{self.entity_type}-{self.start_idx}-{self.end_idx}')
@@ -78,7 +78,7 @@ class NERGoldPredictedPair:
     def __str__(self) -> str:
         return f'{{Gold: {self.gold_span}, Predicted: {self.predicted_span}}}'
     
-    def _repr__(self) -> str:
+    def __repr__(self) -> str:
         return f'{{Gold: {self.gold_span}, Predicted: {self.predicted_span}}}'
 
     def __eq__(self, o: NERGoldPredictedPair) -> bool:
@@ -107,18 +107,20 @@ class NERResultAggregator:
         self.partial_match = deepcopy(self.__metrics_template)
         self.bounds_match = deepcopy(self.__metrics_template)
 
-        self.type_match_span_match: List[Tuple[NEREntitySpan, NEREntitySpan]] = [
+        self.type_match_span_match: List[NERGoldPredictedPair] = [
         ]
         self.unecessary_predicted_entity: List[NEREntitySpan] = []
         self.missed_gold_entity: List[NEREntitySpan] = []
-        self.type_mismatch_span_match: List[Tuple[NEREntitySpan, NEREntitySpan]] = [
+        self.type_mismatch_span_match: List[NERGoldPredictedPair] = [
         ]
-        self.type_match_span_partial: List[Tuple[NEREntitySpan, NEREntitySpan]] = [
+        self.type_match_span_partial: List[NERGoldPredictedPair] = [
         ]
-        self.type_mismatch_span_partial: List[Tuple[NEREntitySpan, NEREntitySpan]] = [
+        self.type_mismatch_span_partial: List[NERGoldPredictedPair] = [
         ]
     
     def summarize_result(self):
+        """Summarizes the results into numbers.
+        """
         def summarize_metric(metric):
             summary = metric.copy()
             for key in metric.keys():
@@ -179,7 +181,7 @@ class NERResultAggregator:
             pred_entity (NEREntitySpan): Predicted Entity Span.
         """
 
-        self.type_match_span_match.append((gold_entity, pred_entity))
+        self.type_match_span_match.append(NERGoldPredictedPair(gold_entity, pred_entity))
 
         self.strict_match["correct"].append(NERGoldPredictedPair(gold_entity, pred_entity))
         self.type_match["correct"].append(NERGoldPredictedPair(gold_entity, pred_entity))
@@ -231,8 +233,8 @@ class NERResultAggregator:
             entity type was incorrect.
 
         Args:
-            gold_entity (NEREntitySpan): Gold entity span for which span was predicted
-                                            correctly but the type wasn't.
+            gold_entity (NEREntitySpan): Gold entity span for which which span was correct
+                                            but the type was not.
             pred_entity (NEREntitySpan): Predicted Entity span for which span was correct
                                             but the type was not.
         """
@@ -254,8 +256,8 @@ class NERResultAggregator:
         Args:
             gold_entity (NEREntitySpan): Gold entity span for which span was predicted partially correctly
                 whereas the entity type was predicted correctly. 
-            pred_entity (NEREntitySpan): Predicted Entity span for which span was correct but the 
-                type was not.
+            pred_entity (NEREntitySpan): Predicted Entity span for which span was predicted partially correctly
+                whereas the entity type was predicted correctly. 
         """
 
         self.type_match_span_partial.append(NERGoldPredictedPair(gold_entity, pred_entity))
@@ -273,8 +275,10 @@ class NERResultAggregator:
                 type was incorrect.
 
         Args:
-            gold_entity (NEREntitySpan): [description]
-            pred_entity (NEREntitySpan): [description]
+            gold_entity (NEREntitySpan): Gold entity span for which span was predicted partially correctly
+                whereas the entity type was predicted incorrectly. 
+            pred_entity (NEREntitySpan): Predicted Entity span for which span was predicted partially correctly
+                whereas the entity type was predicted incorrectly. 
         """
 
         self.type_mismatch_span_partial.append(NERGoldPredictedPair(gold_entity, pred_entity))

@@ -47,10 +47,10 @@ def test_NEREntitySpan_overlaps_with():
     assert entity.overlaps_with(entity_non_overlap_right) == False
 
 def test_NEREntitySpan__str__():
-    assert NEREntitySpan('test',1,2,['X1','X2']).__str__() == "Entity Type: \"test\", Token Span IDX:(1, 2), Tokens:['X1', 'X2'], Context:['X1', 'X2']"
+    assert NEREntitySpan('test',1,2,['X1','X2']).__str__() == "(Entity Type: \"test\", Token Span IDX:(1, 2), Tokens:['X1', 'X2'], Context:['X1', 'X2'])"
 
 def test_NEREntitySpan__repr__():
-    assert NEREntitySpan('test',1,2,['X1','X2']).__repr__() == "Entity Type: \"test\", Token Span IDX:(1, 2), Tokens:['X1', 'X2'], Context:['X1', 'X2']"
+    assert NEREntitySpan('test',1,2,['X1','X2']).__repr__() == "(Entity Type: \"test\", Token Span IDX:(1, 2), Tokens:['X1', 'X2'], Context:['X1', 'X2'])"
 
 def test_NEREntitySpan__hash__():
     assert NEREntitySpan('test',1,2,['X1','X2']) in set([NEREntitySpan('test',1,2,['X1','X2'])])

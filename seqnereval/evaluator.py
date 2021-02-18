@@ -1,6 +1,6 @@
 from .models import NERResultAggregator, NEREntitySpan
 from collections import defaultdict
-from typing import List
+from typing import List, Tuple
 
 
 class NEREvaluator:
@@ -30,25 +30,34 @@ class NEREvaluator:
         self.results_grouped_by_tags = defaultdict(
             lambda: NERResultAggregator())
 
-    def evaluate(self):
+    def evaluate(self) -> Tuple[NERResultAggregator, NERResultAggregator]:
+        """Runs the evaluation and return results
+
+        Returns:
+            Tuple[NERResultAggregator, NERResultAggregator]: (Results, Results Grouped by tags)
+        """
         results_by_doc = []
         results = NERResultAggregator()
 
         for gold_spans, pred_spans in zip(self.gold_entity_span_lists, self.pred_entity_span_lists):
-            results_for_curr_doc = self.calculate_metrics_for_doc(
+            results_for_curr_doc = self.__calculate_metrics_for_doc(
                 gold_spans, pred_spans)
             results_by_doc.append(results_for_curr_doc)
             results.append_result_aggregator(results_for_curr_doc[0])
 
         return results, results_for_curr_doc
 
-    def calculate_metrics_for_doc(self, gold_entity_spans: List[NEREntitySpan], pred_entity_spans: List[NEREntitySpan]):
+    def __calculate_metrics_for_doc(self, gold_entity_spans: List[NEREntitySpan], pred_entity_spans: List[NEREntitySpan]) -> Tuple[NERResultAggregator, NERResultAggregator]:
         """Calculate the metrics for a particular document.
 
         Args:
-            gold_entity_spans (List[NEREntitySpan]): [description]
-            pred_entity_spans (List[NEREntitySpan]): [description]
+            gold_entity_spans (List[NEREntitySpan]): list of gold entity spans
+            pred_entity_spans (List[NEREntitySpan]): list of predicted entity spans
+
+        Returns:
+            Tuple[NERResultAggregator, NERResultAggregator]: (Results, Results Grouped by tags)
         """
+
         def entity_span_sort_fn(span): return (span.start_idx, span.end_idx)
 
         # sort the entity list so we can make the evaluation faster (O(n)).

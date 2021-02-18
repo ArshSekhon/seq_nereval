@@ -370,7 +370,7 @@ def test_ner_evaluator_type_match_span_overlap():
         "recall": 0,
         "f1": 0,
     }
-
+ 
 def test_ner_evaluator_type_mismatch_span_exact():
     predicted_entities = [
         [
