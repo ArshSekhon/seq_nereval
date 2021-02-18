@@ -208,9 +208,9 @@ class NERTagListEvaluator(NEREvaluator):
             pred_tag_lists (List[List[str]]): List of predicted tag lists for different documents.
         """
 
-        self.tokens = tokens
-        self.gold_tag_lists = gold_tag_lists
-        self.pred_tag_lists = pred_tag_lists
+        self.tokens = list(tokens)
+        self.gold_tag_lists = list(gold_tag_lists)
+        self.pred_tag_lists = list(pred_tag_lists)
         self.entity_context_padding = entity_context_padding
 
         gold_entity_spans = self.__tagged_list_to_span(

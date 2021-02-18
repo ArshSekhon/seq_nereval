@@ -24,12 +24,12 @@ class NEREntitySpan:
             self.span_context = span_context
 
     def __str__(self):
-        return (f'Entity Type: "{self.entity_type}", Span:({self.start_idx},'
-                f' {self.end_idx}), Tokens:{self.tokens_spanned}')
+        return (f'Entity Type: "{self.entity_type}", Token Span IDX:({self.start_idx},'
+                f' {self.end_idx}), Tokens:{self.tokens_spanned}, Context:{self.span_context}')
 
     def __repr__(self):
-        return (f'Entity Type: "{self.entity_type}", Span:({self.start_idx},'
-                f' {self.end_idx}), Tokens:{self.tokens_spanned}')
+        return (f'Entity Type: "{self.entity_type}", Token Span IDX:({self.start_idx},'
+                f' {self.end_idx}), Tokens:{self.tokens_spanned}, Context:{self.span_context}')
 
     def __hash__(self):
         return hash(f'{self.entity_type}-{self.start_idx}-{self.end_idx}')
@@ -97,6 +97,27 @@ class NERResultAggregator:
         ]
         self.type_mismatch_span_partial: List[Tuple[NEREntitySpan, NEREntitySpan]] = [
         ]
+    
+    def summarize_result(self):
+        def summarize_metric(metric):
+            summary = metric.copy()
+            for key in metric.keys():
+                if type(metric[key]) is list:
+                    summary[key] = len(metric[key])
+            return summary
+        
+        return {
+            "strict_match": summarize_metric(self.strict_match),
+            "type_match": summarize_metric(self.type_match),
+            "partial_match": summarize_metric(self.partial_match),
+            "bounds_match": summarize_metric(self.bounds_match),
+            "type_match_span_match": len(self.type_match_span_match),
+            "unecessary_predicted_entity": len(self.unecessary_predicted_entity),
+            "missed_gold_entity": len(self.missed_gold_entity),
+            "type_mismatch_span_match": len(self.type_mismatch_span_match),
+            "type_match_span_partial": len(self.type_match_span_partial),
+            "type_mismatch_span_partial": len(self.type_mismatch_span_partial)
+        }
 
     def append_result_aggregator(self, otherResults: NERResultAggregator) -> None:
         """Appends the results obtained from a different evaluation.
