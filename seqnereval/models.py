@@ -2,7 +2,6 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import List, Tuple, Dict
 
-
 class NEREntitySpan:
     def __init__(self, entity_type: str, start_idx: int, end_idx: int, tokens_spanned: List[str] = [], span_context=None):
         """
@@ -63,6 +62,27 @@ class NEREntitySpan:
 
         return max(self.start_idx, otherEntity.start_idx) <= min(self.end_idx, otherEntity.end_idx)
 
+class NERGoldPredictedPair:
+    """Pair of gold and predicted entity
+    """
+    def __init__(self, gold_span: NEREntitySpan, predicted_span: NEREntitySpan) -> None:
+        """Constructor for NERGoldPredictedPair
+
+        Args:
+            gold_span (NEREntitySpan): Gold Entity span.
+            predicted_span (NEREntitySpan): Predicted Entity span.
+        """
+        self.gold_span = gold_span
+        self.predicted_span = predicted_span
+    
+    def __str__(self) -> str:
+        return f'{{Gold: {self.gold_span}, Predicted: {self.predicted_span}}}'
+    
+    def _repr__(self) -> str:
+        return f'{{Gold: {self.gold_span}, Predicted: {self.predicted_span}}}'
+
+    def __eq__(self, o: NERGoldPredictedPair) -> bool:
+        return self.gold_span==o.gold_span and self.predicted_span==o.predicted_span
 
 class NERResultAggregator:
     def __init__(self):
@@ -161,10 +181,10 @@ class NERResultAggregator:
 
         self.type_match_span_match.append((gold_entity, pred_entity))
 
-        self.strict_match["correct"].append((gold_entity, pred_entity))
-        self.type_match["correct"].append((gold_entity, pred_entity))
-        self.partial_match["correct"].append((gold_entity, pred_entity))
-        self.bounds_match["correct"].append((gold_entity, pred_entity))
+        self.strict_match["correct"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.type_match["correct"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.partial_match["correct"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.bounds_match["correct"].append(NERGoldPredictedPair(gold_entity, pred_entity))
 
         self.refresh_metrics()
 
@@ -217,12 +237,12 @@ class NERResultAggregator:
                                             but the type was not.
         """
 
-        self.type_mismatch_span_match.append((gold_entity, pred_entity))
+        self.type_mismatch_span_match.append(NERGoldPredictedPair(gold_entity, pred_entity))
 
-        self.strict_match["incorrect"].append((gold_entity, pred_entity))
-        self.type_match["incorrect"].append((gold_entity, pred_entity))
-        self.partial_match["correct"].append((gold_entity, pred_entity))
-        self.bounds_match["correct"].append((gold_entity, pred_entity))
+        self.strict_match["incorrect"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.type_match["incorrect"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.partial_match["correct"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.bounds_match["correct"].append(NERGoldPredictedPair(gold_entity, pred_entity))
 
         self.refresh_metrics()
 
@@ -238,12 +258,12 @@ class NERResultAggregator:
                 type was not.
         """
 
-        self.type_match_span_partial.append((gold_entity, pred_entity))
+        self.type_match_span_partial.append(NERGoldPredictedPair(gold_entity, pred_entity))
 
-        self.strict_match["incorrect"].append((gold_entity, pred_entity))
-        self.type_match["correct"].append((gold_entity, pred_entity))
-        self.partial_match["partial"].append((gold_entity, pred_entity))
-        self.bounds_match["incorrect"].append((gold_entity, pred_entity))
+        self.strict_match["incorrect"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.type_match["correct"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.partial_match["partial"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.bounds_match["incorrect"].append(NERGoldPredictedPair(gold_entity, pred_entity))
 
         self.refresh_metrics()
 
@@ -257,12 +277,12 @@ class NERResultAggregator:
             pred_entity (NEREntitySpan): [description]
         """
 
-        self.type_mismatch_span_partial.append((gold_entity, pred_entity))
+        self.type_mismatch_span_partial.append(NERGoldPredictedPair(gold_entity, pred_entity))
 
-        self.strict_match["incorrect"].append((gold_entity, pred_entity))
-        self.type_match["incorrect"].append((gold_entity, pred_entity))
-        self.partial_match["partial"].append((gold_entity, pred_entity))
-        self.bounds_match["incorrect"].append((gold_entity, pred_entity))
+        self.strict_match["incorrect"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.type_match["incorrect"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.partial_match["partial"].append(NERGoldPredictedPair(gold_entity, pred_entity))
+        self.bounds_match["incorrect"].append(NERGoldPredictedPair(gold_entity, pred_entity))
 
         self.refresh_metrics()
 

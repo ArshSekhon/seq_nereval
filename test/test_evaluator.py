@@ -1,3 +1,4 @@
+from seqnereval.models import NERGoldPredictedPair
 from seqnereval import NERTagListEvaluator, NEREvaluator, NEREntitySpan
 import pytest
 import json
@@ -91,7 +92,6 @@ def test_ner_taglist_eval_tags_to_span_check_span_context():
     # print(pred_spans)
     assert gold_spans == expected
     assert pred_spans == expected
-
 
 def test_ner_evaluate_missed_entity():
     missed_entity = NEREntitySpan('PER', 10, 32)
@@ -216,8 +216,6 @@ def test_ner_evaluate_unecessary_predicted_entity():
         "f1": 0,
     }
 
-
-
 def test_ner_evaluator_type_match_span_match_overlap():
     predicted_entities = [
         [
@@ -244,12 +242,11 @@ def test_ner_evaluator_type_match_span_match_overlap():
     res, _ = evaluator.evaluate()
 
     assert res.strict_match == {
-        "correct": [(NEREntitySpan("LOC", 197, 205), NEREntitySpan("LOC", 197, 205)),
-                    (NEREntitySpan("LOC", 208, 219), NEREntitySpan("LOC", 208, 219))],
-        "incorrect": [(NEREntitySpan("LOC", 127, 134), NEREntitySpan("LOC", 124, 134)),
-                      (NEREntitySpan("LOC", 164, 174),
-                       NEREntitySpan("PER", 164, 174)),
-                      (NEREntitySpan("MISC", 230, 240), NEREntitySpan("LOC", 225, 243))],
+        "correct": [NERGoldPredictedPair(NEREntitySpan("LOC", 197, 205), NEREntitySpan("LOC", 197, 205)),
+                    NERGoldPredictedPair(NEREntitySpan("LOC", 208, 219), NEREntitySpan("LOC", 208, 219))],
+        "incorrect": [NERGoldPredictedPair(NEREntitySpan("LOC", 127, 134), NEREntitySpan("LOC", 124, 134)),
+                      NERGoldPredictedPair(NEREntitySpan("LOC", 164, 174), NEREntitySpan("PER", 164, 174)),
+                      NERGoldPredictedPair(NEREntitySpan("MISC", 230, 240), NEREntitySpan("LOC", 225, 243))],
         "partial": [],
         "missed": [NEREntitySpan("PER", 59, 69)],
         "spurious": [NEREntitySpan("PER", 24, 30)],
@@ -261,12 +258,11 @@ def test_ner_evaluator_type_match_span_match_overlap():
     }
 
     assert res.type_match == {
-        "correct": [(NEREntitySpan("LOC", 127, 134), NEREntitySpan("LOC", 124, 134)),
-                    (NEREntitySpan("LOC", 197, 205),
-                     NEREntitySpan("LOC", 197, 205)),
-                    (NEREntitySpan("LOC", 208, 219), NEREntitySpan("LOC", 208, 219))],
-        "incorrect": [(NEREntitySpan("LOC", 164, 174), NEREntitySpan("PER", 164, 174)),
-                      (NEREntitySpan("MISC", 230, 240), NEREntitySpan("LOC", 225, 243))],
+        "correct": [NERGoldPredictedPair(NEREntitySpan("LOC", 127, 134), NEREntitySpan("LOC", 124, 134)),
+                    NERGoldPredictedPair(NEREntitySpan("LOC", 197, 205), NEREntitySpan("LOC", 197, 205)),
+                    NERGoldPredictedPair(NEREntitySpan("LOC", 208, 219), NEREntitySpan("LOC", 208, 219))],
+        "incorrect": [NERGoldPredictedPair(NEREntitySpan("LOC", 164, 174), NEREntitySpan("PER", 164, 174)),
+                      NERGoldPredictedPair(NEREntitySpan("MISC", 230, 240), NEREntitySpan("LOC", 225, 243))],
         "partial": [],
         "missed": [NEREntitySpan("PER", 59, 69)],
         "spurious": [NEREntitySpan("PER", 24, 30)],
@@ -278,13 +274,12 @@ def test_ner_evaluator_type_match_span_match_overlap():
     }
 
     assert res.partial_match == {
-        "correct": [(NEREntitySpan("LOC", 164, 174), NEREntitySpan("PER", 164, 174)),
-                    (NEREntitySpan("LOC", 197, 205),
-                     NEREntitySpan("LOC", 197, 205)),
-                    (NEREntitySpan("LOC", 208, 219), NEREntitySpan("LOC", 208, 219))],
+        "correct": [NERGoldPredictedPair(NEREntitySpan("LOC", 164, 174), NEREntitySpan("PER", 164, 174)),
+                    NERGoldPredictedPair(NEREntitySpan("LOC", 197, 205), NEREntitySpan("LOC", 197, 205)),
+                    NERGoldPredictedPair(NEREntitySpan("LOC", 208, 219), NEREntitySpan("LOC", 208, 219))],
         "incorrect": [],
-        "partial": [(NEREntitySpan("LOC", 127, 134), NEREntitySpan("LOC", 124, 134)),
-                    (NEREntitySpan("MISC", 230, 240), NEREntitySpan("LOC", 225, 243))],
+        "partial": [NERGoldPredictedPair(NEREntitySpan("LOC", 127, 134), NEREntitySpan("LOC", 124, 134)),
+                    NERGoldPredictedPair(NEREntitySpan("MISC", 230, 240), NEREntitySpan("LOC", 225, 243))],
         "missed": [NEREntitySpan("PER", 59, 69)],
         "spurious": [NEREntitySpan("PER", 24, 30)],
         "possible": 6,
@@ -295,12 +290,11 @@ def test_ner_evaluator_type_match_span_match_overlap():
     }
 
     assert res.bounds_match == {
-        "correct": [(NEREntitySpan("LOC", 164, 174), NEREntitySpan("PER", 164, 174)),
-                    (NEREntitySpan("LOC", 197, 205),
-                     NEREntitySpan("LOC", 197, 205)),
-                    (NEREntitySpan("LOC", 208, 219), NEREntitySpan("LOC", 208, 219))],
-        "incorrect": [(NEREntitySpan("LOC", 127, 134), NEREntitySpan("LOC", 124, 134)),
-                      (NEREntitySpan("MISC", 230, 240), NEREntitySpan("LOC", 225, 243))],
+        "correct": [NERGoldPredictedPair(NEREntitySpan("LOC", 164, 174), NEREntitySpan("PER", 164, 174)),
+                    NERGoldPredictedPair(NEREntitySpan("LOC", 197, 205), NEREntitySpan("LOC", 197, 205)),
+                    NERGoldPredictedPair(NEREntitySpan("LOC", 208, 219), NEREntitySpan("LOC", 208, 219))],
+        "incorrect": [NERGoldPredictedPair(NEREntitySpan("LOC", 127, 134), NEREntitySpan("LOC", 124, 134)),
+                      NERGoldPredictedPair(NEREntitySpan("MISC", 230, 240), NEREntitySpan("LOC", 225, 243))],
         "partial": [],
         "missed": [NEREntitySpan("PER", 59, 69)],
         "spurious": [NEREntitySpan("PER", 24, 30)],
@@ -328,7 +322,7 @@ def test_ner_evaluator_type_match_span_overlap():
 
     assert res.strict_match == {
         "correct": [],
-        "incorrect": [(NEREntitySpan("PER", 29, 69), NEREntitySpan("PER", 24, 30))],
+        "incorrect": [NERGoldPredictedPair(NEREntitySpan("PER", 29, 69), NEREntitySpan("PER", 24, 30))],
         "partial": [],
         "missed": [],
         "spurious": [],
@@ -340,7 +334,7 @@ def test_ner_evaluator_type_match_span_overlap():
     }
 
     assert res.type_match == {
-        "correct": [(NEREntitySpan("PER", 29, 69), NEREntitySpan("PER", 24, 30))],
+        "correct": [NERGoldPredictedPair(NEREntitySpan("PER", 29, 69), NEREntitySpan("PER", 24, 30))],
         "incorrect": [],
         "partial": [],
         "missed": [],
@@ -355,7 +349,7 @@ def test_ner_evaluator_type_match_span_overlap():
     assert res.partial_match == {
         "correct": [],
         "incorrect": [],
-        "partial": [(NEREntitySpan("PER", 29, 69), NEREntitySpan("PER", 24, 30))],
+        "partial": [NERGoldPredictedPair(NEREntitySpan("PER", 29, 69), NEREntitySpan("PER", 24, 30))],
         "missed": [],
         "spurious": [],
         "possible": 1,
@@ -367,7 +361,7 @@ def test_ner_evaluator_type_match_span_overlap():
 
     assert res.bounds_match == {
         "correct": [],
-        "incorrect": [(NEREntitySpan("PER", 29, 69), NEREntitySpan("PER", 24, 30))],
+        "incorrect": [NERGoldPredictedPair(NEREntitySpan("PER", 29, 69), NEREntitySpan("PER", 24, 30))],
         "partial": [],
         "missed": [],
         "spurious": [],
@@ -396,7 +390,7 @@ def test_ner_evaluator_type_mismatch_span_exact():
 
     assert res.strict_match == {
         "correct": [],
-        "incorrect": [(NEREntitySpan("LOC", 24, 30), NEREntitySpan("PER", 24, 30))],
+        "incorrect": [NERGoldPredictedPair(NEREntitySpan("LOC", 24, 30), NEREntitySpan("PER", 24, 30))],
         "partial": [],
         "missed": [],
         "spurious": [],
@@ -409,7 +403,7 @@ def test_ner_evaluator_type_mismatch_span_exact():
 
     assert res.type_match == {
         "correct": [],
-        "incorrect": [(NEREntitySpan("LOC", 24, 30), NEREntitySpan("PER", 24, 30))],
+        "incorrect": [NERGoldPredictedPair(NEREntitySpan("LOC", 24, 30), NEREntitySpan("PER", 24, 30))],
         "partial": [],
         "missed": [],
         "spurious": [],
@@ -421,7 +415,7 @@ def test_ner_evaluator_type_mismatch_span_exact():
     }
 
     assert res.partial_match == {
-        "correct": [(NEREntitySpan("LOC", 24, 30), NEREntitySpan("PER", 24, 30))],
+        "correct": [NERGoldPredictedPair(NEREntitySpan("LOC", 24, 30), NEREntitySpan("PER", 24, 30))],
         "incorrect": [],
         "partial": [],
         "missed": [],
@@ -434,7 +428,7 @@ def test_ner_evaluator_type_mismatch_span_exact():
     }
 
     assert res.bounds_match == {
-        "correct": [(NEREntitySpan("LOC", 24, 30), NEREntitySpan("PER", 24, 30))],
+        "correct": [NERGoldPredictedPair(NEREntitySpan("LOC", 24, 30), NEREntitySpan("PER", 24, 30))],
         "incorrect": [],
         "partial": [],
         "missed": [],
@@ -464,7 +458,7 @@ def test_ner_evaluator_type_mismatch_span_partial():
 
     assert res.strict_match == {
         "correct": [],
-        "incorrect": [(NEREntitySpan("LOC", 21, 26), NEREntitySpan("PER", 24, 30))],
+        "incorrect": [NERGoldPredictedPair(NEREntitySpan("LOC", 21, 26), NEREntitySpan("PER", 24, 30))],
         "partial": [],
         "missed": [],
         "spurious": [],
@@ -477,7 +471,7 @@ def test_ner_evaluator_type_mismatch_span_partial():
 
     assert res.type_match == {
         "correct": [],
-        "incorrect": [(NEREntitySpan("LOC", 21, 26), NEREntitySpan("PER", 24, 30))],
+        "incorrect": [NERGoldPredictedPair(NEREntitySpan("LOC", 21, 26), NEREntitySpan("PER", 24, 30))],
         "partial": [],
         "missed": [],
         "spurious": [],
@@ -491,7 +485,7 @@ def test_ner_evaluator_type_mismatch_span_partial():
     assert res.partial_match == {
         "correct": [],
         "incorrect": [],
-        "partial": [(NEREntitySpan("LOC", 21, 26), NEREntitySpan("PER", 24, 30))],
+        "partial": [NERGoldPredictedPair(NEREntitySpan("LOC", 21, 26), NEREntitySpan("PER", 24, 30))],
         "missed": [],
         "spurious": [],
         "possible": 1,
@@ -503,7 +497,7 @@ def test_ner_evaluator_type_mismatch_span_partial():
 
     assert res.bounds_match == {
         "correct": [],
-        "incorrect": [(NEREntitySpan("LOC", 21, 26), NEREntitySpan("PER", 24, 30))],
+        "incorrect": [NERGoldPredictedPair(NEREntitySpan("LOC", 21, 26), NEREntitySpan("PER", 24, 30))],
         "partial": [],
         "missed": [],
         "spurious": [],
