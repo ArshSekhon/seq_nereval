@@ -1,16 +1,16 @@
-from .models import NERResultAggregator, NEREntitySpan
+from .models import ResultAggregator, Span
 from collections import defaultdict
 from typing import List, Tuple
 
 
 class NEREvaluator:
-    def __init__(self, gold_entity_span_lists: List[List[NEREntitySpan]], pred_entity_span_lists: List[List[NEREntitySpan]]):
+    def __init__(self, gold_entity_span_lists: List[List[Span]], pred_entity_span_lists: List[List[Span]]):
         """
         Constructor for NEREvaluator
 
         Args:
-            gold_entity_span_lists (List[List[NEREntitySpan]]): List of gold entity spans lists for different documents.
-            pred_entity_span_lists (List[List[NEREntitySpan]]): List of predicted entity span list for different documents.
+            gold_entity_span_lists (List[List[Span]]): List of gold entity spans lists for different documents.
+            pred_entity_span_lists (List[List[Span]]): List of predicted entity span list for different documents.
         """
         if len(gold_entity_span_lists) != len(pred_entity_span_lists):
             raise Exception(f'# of documents for which golden tags were provided {len(gold_entity_span_lists)}'
@@ -22,22 +22,22 @@ class NEREvaluator:
         # TODO: check for overlapping spans and throw exceptions
 
         self.unique_gold_tags = list(
-            set([span.entity_type
+            set([span.span_type
                  for gold_entity_span_list in gold_entity_span_lists
                  for span in gold_entity_span_list]))
 
-        self.results = NERResultAggregator()
+        self.results = ResultAggregator()
         self.results_grouped_by_tags = defaultdict(
-            lambda: NERResultAggregator())
+            lambda: ResultAggregator())
 
-    def evaluate(self) -> Tuple[NERResultAggregator, NERResultAggregator]:
+    def evaluate(self) -> Tuple[ResultAggregator, ResultAggregator]:
         """Runs the evaluation and return results
 
         Returns:
-            Tuple[NERResultAggregator, NERResultAggregator]: (Results, Results Grouped by tags)
+            Tuple[ResultAggregator, ResultAggregator]: (Results, Results Grouped by tags)
         """
         results_by_doc = []
-        results = NERResultAggregator()
+        results = ResultAggregator()
 
         for gold_spans, pred_spans in zip(self.gold_entity_span_lists, self.pred_entity_span_lists):
             results_for_curr_doc = self.__calculate_metrics_for_doc(
@@ -47,15 +47,15 @@ class NEREvaluator:
 
         return results, results_for_curr_doc
 
-    def __calculate_metrics_for_doc(self, gold_entity_spans: List[NEREntitySpan], pred_entity_spans: List[NEREntitySpan]) -> Tuple[NERResultAggregator, NERResultAggregator]:
+    def __calculate_metrics_for_doc(self, gold_entity_spans: List[Span], pred_entity_spans: List[Span]) -> Tuple[ResultAggregator, ResultAggregator]:
         """Calculate the metrics for a particular document.
 
         Args:
-            gold_entity_spans (List[NEREntitySpan]): list of gold entity spans
-            pred_entity_spans (List[NEREntitySpan]): list of predicted entity spans
+            gold_entity_spans (List[Span]): list of gold entity spans
+            pred_entity_spans (List[Span]): list of predicted entity spans
 
         Returns:
-            Tuple[NERResultAggregator, NERResultAggregator]: (Results, Results Grouped by tags)
+            Tuple[ResultAggregator, ResultAggregator]: (Results, Results Grouped by tags)
         """
 
         def entity_span_sort_fn(span): return (span.start_idx, span.end_idx)
@@ -68,17 +68,17 @@ class NEREvaluator:
         gold_part_overlap_in_last_step, pred_part_overlap_in_last_step = False, False
 
         gold_idx, pred_idx = 0, 0
-        results = NERResultAggregator()
-        results_grouped_by_tags = defaultdict(lambda: NERResultAggregator())
+        results = ResultAggregator()
+        results_grouped_by_tags = defaultdict(lambda: ResultAggregator())
 
         while gold_idx < len(gold_entity_spans) and pred_idx < len(pred_entity_spans):
             if gold_entity_spans[gold_idx] == pred_entity_spans[pred_idx]:
                 # Scenario I: Both entity type/labels and spans match perfectly
-                results.add_type_match_span_match(
+                results.add_type_match_bounds_match(
                     gold_entity_spans[gold_idx], pred_entity_spans[pred_idx])
 
-                gold_entity_type = gold_entity_spans[gold_idx].entity_type
-                results_grouped_by_tags[gold_entity_type].add_type_match_span_match(
+                gold_span_type = gold_entity_spans[gold_idx].span_type
+                results_grouped_by_tags[gold_span_type].add_type_match_bounds_match(
                     gold_entity_spans[gold_idx],
                     pred_entity_spans[pred_idx]
                 )
@@ -91,13 +91,13 @@ class NEREvaluator:
 
                 gold_part_overlap_in_last_step, pred_part_overlap_in_last_step = False, False
 
-            elif gold_entity_spans[gold_idx].spans_same_tokens_as(pred_entity_spans[pred_idx]):
+            elif gold_entity_spans[gold_idx].bounds_same_tokens_as(pred_entity_spans[pred_idx]):
                 # Scenario IV: Wrong Entity types but, spans match perfectly
-                results.add_type_mismatch_span_match(
+                results.add_type_mismatch_bounds_match(
                     gold_entity_spans[gold_idx], pred_entity_spans[pred_idx])
 
-                gold_entity_type = gold_entity_spans[gold_idx].entity_type
-                results_grouped_by_tags[gold_entity_type].add_type_mismatch_span_match(
+                gold_span_type = gold_entity_spans[gold_idx].span_type
+                results_grouped_by_tags[gold_span_type].add_type_mismatch_bounds_match(
                     gold_entity_spans[gold_idx],
                     pred_entity_spans[pred_idx]
                 )
@@ -111,27 +111,27 @@ class NEREvaluator:
                 gold_part_overlap_in_last_step, pred_part_overlap_in_last_step = False, False
 
             elif gold_entity_spans[gold_idx].overlaps_with(pred_entity_spans[pred_idx]):
-                if gold_entity_spans[gold_idx].entity_type == pred_entity_spans[pred_idx].entity_type:
+                if gold_entity_spans[gold_idx].span_type == pred_entity_spans[pred_idx].span_type:
                     # Scenario V: Correct Entity Type, partial span overlap
-                    results.add_type_match_span_partial(
+                    results.add_type_match_bounds_partial(
                         gold_entity_spans[gold_idx],
                         pred_entity_spans[pred_idx]
                     )
 
-                    gold_entity_type = gold_entity_spans[gold_idx].entity_type
-                    results_grouped_by_tags[gold_entity_type].add_type_match_span_partial(
+                    gold_span_type = gold_entity_spans[gold_idx].span_type
+                    results_grouped_by_tags[gold_span_type].add_type_match_bounds_partial(
                         gold_entity_spans[gold_idx],
                         pred_entity_spans[pred_idx]
                     )
                 else:
                     # Scenario VI: Wrong Entity Type, partial span overlap
-                    results.add_type_mismatch_span_partial(
+                    results.add_type_mismatch_bounds_partial(
                         gold_entity_spans[gold_idx],
                         pred_entity_spans[pred_idx]
                     )
 
-                    gold_entity_type = gold_entity_spans[gold_idx].entity_type
-                    results_grouped_by_tags[gold_entity_type].add_type_mismatch_span_partial(
+                    gold_span_type = gold_entity_spans[gold_idx].span_type
+                    results_grouped_by_tags[gold_span_type].add_type_mismatch_bounds_partial(
                         gold_entity_spans[gold_idx],
                         pred_entity_spans[pred_idx]
                     )
@@ -151,11 +151,11 @@ class NEREvaluator:
                 if pred_entity_spans[pred_idx].start_idx > gold_entity_spans[gold_idx].end_idx:
                     if not gold_part_overlap_in_last_step:
                         # Scenario III system missed an entity
-                        results.add_missed_gold_entity(
+                        results.add_missed_gold_span(
                             gold_entity_spans[gold_idx])
 
-                        gold_entity_type = gold_entity_spans[gold_idx].entity_type
-                        results_grouped_by_tags[gold_entity_type].add_missed_gold_entity(
+                        gold_span_type = gold_entity_spans[gold_idx].span_type
+                        results_grouped_by_tags[gold_span_type].add_missed_gold_span(
                             gold_entity_spans[gold_idx]
                         )
 
@@ -164,11 +164,11 @@ class NEREvaluator:
                 elif pred_entity_spans[pred_idx].end_idx < gold_entity_spans[gold_idx].start_idx:
                     if not pred_part_overlap_in_last_step:
                         # Scenario II system hypothesised an extra entity
-                        results.add_unecessary_predicted_entity(
+                        results.add_unecessary_predicted_span(
                             pred_entity_spans[pred_idx])
 
-                        pred_entity_type = pred_entity_spans[pred_idx].entity_type
-                        results_grouped_by_tags[pred_entity_type].add_unecessary_predicted_entity(
+                        pred_span_type = pred_entity_spans[pred_idx].span_type
+                        results_grouped_by_tags[pred_span_type].add_unecessary_predicted_span(
                             pred_entity_spans[pred_idx]
                         )
 
@@ -180,11 +180,11 @@ class NEREvaluator:
 
         while gold_idx < len(gold_entity_spans):
             # Scenario III: missed entity
-            results.add_missed_gold_entity(
+            results.add_missed_gold_span(
                 gold_entity_spans[gold_idx])
 
-            gold_entity_type = gold_entity_spans[gold_idx].entity_type
-            results_grouped_by_tags[gold_entity_type].add_missed_gold_entity(
+            gold_span_type = gold_entity_spans[gold_idx].span_type
+            results_grouped_by_tags[gold_span_type].add_missed_gold_span(
                 gold_entity_spans[gold_idx]
             )
 
@@ -194,11 +194,11 @@ class NEREvaluator:
             pred_idx += 1
         while pred_idx < len(pred_entity_spans):
             # Scenario II: hypothesised entity incorrect
-            results.add_unecessary_predicted_entity(
+            results.add_unecessary_predicted_span(
                 pred_entity_spans[pred_idx])
 
-            pred_entity_type = pred_entity_spans[pred_idx].entity_type
-            results_grouped_by_tags[pred_entity_type].add_unecessary_predicted_entity(
+            pred_span_type = pred_entity_spans[pred_idx].span_type
+            results_grouped_by_tags[pred_span_type].add_unecessary_predicted_span(
                 pred_entity_spans[pred_idx]
             )
 
@@ -216,7 +216,7 @@ class NERTagListEvaluator(NEREvaluator):
             gold_tag_lists (List[List[str]]): List of golden tag lists for different documents.
             pred_tag_lists (List[List[str]]): List of predicted tag lists for different documents.
         """
-
+        # TODO: Check for nesting and convert nested items to list
         self.tokens = list(tokens)
         self.gold_tag_lists = list(gold_tag_lists)
         self.pred_tag_lists = list(pred_tag_lists)
@@ -267,14 +267,14 @@ class NERTagListEvaluator(NEREvaluator):
                     f'Tag List:{tag_list} Token List: {token_list}'
                 )
 
-            for offset, (token_tag, token) in enumerate(zip(tag_list, token_list)):
+            for offset, (token_tag, _) in enumerate(zip(tag_list, token_list)):
                 if token_tag == "O":
                     # if a sequence of non-"O" tags was seen last and
                     # a "O" tag is encountered => Label has ended.
                     if label is not None and start_offset is not None:
                         end_offset = offset - 1
                         labelled_entities.append(
-                            NEREntitySpan(label, start_offset,
+                            Span(label, start_offset,
                                           end_offset, token_list[start_offset:end_offset+1], 
                                           get_context_tokens(token_list, start_offset, end_offset))
                         )
@@ -293,7 +293,7 @@ class NERTagListEvaluator(NEREvaluator):
 
                     end_offset = offset - 1
                     labelled_entities.append(
-                        NEREntitySpan(label, start_offset,
+                        Span(label, start_offset,
                                       end_offset, token_list[start_offset:end_offset+1], 
                                       get_context_tokens(token_list, start_offset, end_offset))
                     )
@@ -303,12 +303,13 @@ class NERTagListEvaluator(NEREvaluator):
                     start_offset = offset
                     end_offset = None
                 elif not token_tag.startswith(valid_token_tag_prefix):
+                    # TODO: Add line information
                     raise Exception(f'Unknown Token Tag: {token_tag}')
 
             if label is not None and start_offset is not None and end_offset is None:
                 end_offset = len(tag_list) - 1
                 labelled_entities.append(
-                    NEREntitySpan(label, start_offset, end_offset, token_list[start_offset:end_offset+1], 
+                    Span(label, start_offset, end_offset, token_list[start_offset:end_offset+1], 
                     get_context_tokens(token_list, start_offset, end_offset))
                 )
 

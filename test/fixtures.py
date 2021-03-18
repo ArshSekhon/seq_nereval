@@ -1,14 +1,14 @@
-from seqnereval.models import NEREntitySpan
+from seqnereval.models import Span
 import random
 from typing import List
 
-def generate_random_entity_span(token_placeholder: str):
-    return NEREntitySpan(token_placeholder, random.randint(
+def generate_random_span(token_placeholder: str):
+    return Span(token_placeholder, random.randint(
             1, 100), random.randint(1, 100))
 
 def generate_random_span_list(token_placeholder: str, count: int) -> List:
     return [
-        NEREntitySpan(token_placeholder, random.randint(
+        Span(token_placeholder, random.randint(
             1, 100), random.randint(1, 100))
         for _ in range(count)
     ]

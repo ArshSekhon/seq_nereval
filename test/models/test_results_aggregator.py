@@ -1,86 +1,34 @@
-from seqnereval.models import NEREntitySpan, NERResultAggregator
+from seqnereval.models import Span, ResultAggregator
 import random
 from typing import List
 from pytest_mock import MockerFixture
-from .fixtures import generate_random_gold_pred_span_pairs, generate_error_scheme_fixture, generate_random_entity_span
+from ..fixtures import generate_random_gold_pred_span_pairs, generate_error_scheme_fixture, generate_random_span
 
-def test_NEREntitySpan_spans_same_tokens_as():
-    entity = NEREntitySpan('test', 10, 15)
-
-    same_span_entity = NEREntitySpan('test', 10, 15)
-    assert entity.spans_same_tokens_as(same_span_entity) == True
-
-    entity_contained_in_span = NEREntitySpan('test', 11, 12)
-    assert entity.spans_same_tokens_as(entity_contained_in_span) == False
-
-    entity_overlap_span_left = NEREntitySpan('test', 7, 10)
-    assert entity.spans_same_tokens_as(entity_overlap_span_left) == False
-
-    entity_overlap_span_right = NEREntitySpan('test', 15, 20)
-    assert entity.spans_same_tokens_as(entity_overlap_span_right) == False
-
-    entity_non_overlap_left = NEREntitySpan('test', 0, 7)
-    assert entity.spans_same_tokens_as(entity_non_overlap_left) == False
-
-    entity_non_overlap_right = NEREntitySpan('test', 20, 27)
-    assert entity.spans_same_tokens_as(entity_non_overlap_right) == False
-
-def test_NEREntitySpan_overlaps_with():
-    entity = NEREntitySpan('test', 10, 15)
-
-    same_span_entity = NEREntitySpan('test', 10, 15)
-    assert entity.overlaps_with(same_span_entity) == True
-
-    entity_contained_in_span = NEREntitySpan('test', 11, 12)
-    assert entity.overlaps_with(entity_contained_in_span) == True
-
-    entity_overlap_span_left = NEREntitySpan('test', 7, 10)
-    assert entity.overlaps_with(entity_overlap_span_left) == True
-
-    entity_overlap_span_right = NEREntitySpan('test', 15, 20)
-    assert entity.overlaps_with(entity_overlap_span_right) == True
-
-    entity_non_overlap_left = NEREntitySpan('test', 0, 7)
-    assert entity.overlaps_with(entity_non_overlap_left) == False
-
-    entity_non_overlap_right = NEREntitySpan('test', 20, 27)
-    assert entity.overlaps_with(entity_non_overlap_right) == False
-
-def test_NEREntitySpan__str__():
-    assert NEREntitySpan('test',1,2,['X1','X2']).__str__() == "(Entity Type: \"test\", Token Span IDX:(1, 2), Tokens:['X1', 'X2'], Context:['X1', 'X2'])"
-
-def test_NEREntitySpan__repr__():
-    assert NEREntitySpan('test',1,2,['X1','X2']).__repr__() == "(Entity Type: \"test\", Token Span IDX:(1, 2), Tokens:['X1', 'X2'], Context:['X1', 'X2'])"
-
-def test_NEREntitySpan__hash__():
-    assert NEREntitySpan('test',1,2,['X1','X2']) in set([NEREntitySpan('test',1,2,['X1','X2'])])
-    assert NEREntitySpan('test',1,3,['X1','X2']) not in set([NEREntitySpan('test',1,2,['X1','X2'])])
-
-def test_NERResultAggregator_append_results(mocker: MockerFixture):
-    empty_results = NERResultAggregator()
-    spy = mocker.spy(empty_results,'refresh_metrics')
-    results_to_append = NERResultAggregator()
+def test_ResultAggregator_append_results(mocker: MockerFixture):
+    empty_results = ResultAggregator()
+    spy = mocker.spy(empty_results,'recalculate_metrics')
+    results_to_append = ResultAggregator()
 
     """
     TEST #1: check if the merger of error scenarios work.
     """
 
     gold_pred_span_fixtures_for_scenarios = {scheme: generate_random_gold_pred_span_pairs(5)
-                                             for scheme in ['type_match_span_match', 'unecessary_predicted_entity', 'missed_gold_entity',
-                                                            'type_mismatch_span_match', 'type_match_span_partial', 'type_mismatch_span_partial']}
+                                             for scheme in ['type_match_bounds_match', 'unecessary_predicted_span', 'missed_gold_span',
+                                                            'type_mismatch_bounds_match', 'type_match_bounds_partial', 'type_mismatch_bounds_partial']}
 
-    results_to_append.type_match_span_match = gold_pred_span_fixtures_for_scenarios[
-        'type_match_span_match']
-    results_to_append.unecessary_predicted_entity = gold_pred_span_fixtures_for_scenarios[
-        'unecessary_predicted_entity']
-    results_to_append.missed_gold_entity = gold_pred_span_fixtures_for_scenarios[
-        'missed_gold_entity']
-    results_to_append.type_mismatch_span_match = gold_pred_span_fixtures_for_scenarios[
-        'type_mismatch_span_match']
-    results_to_append.type_match_span_partial = gold_pred_span_fixtures_for_scenarios[
-        'type_match_span_partial']
-    results_to_append.type_mismatch_span_partial = gold_pred_span_fixtures_for_scenarios[
-        'type_mismatch_span_partial']
+    results_to_append.type_match_bounds_match = gold_pred_span_fixtures_for_scenarios[
+        'type_match_bounds_match']
+    results_to_append.unecessary_predicted_span = gold_pred_span_fixtures_for_scenarios[
+        'unecessary_predicted_span']
+    results_to_append.missed_gold_span = gold_pred_span_fixtures_for_scenarios[
+        'missed_gold_span']
+    results_to_append.type_mismatch_bounds_match = gold_pred_span_fixtures_for_scenarios[
+        'type_mismatch_bounds_match']
+    results_to_append.type_match_bounds_partial = gold_pred_span_fixtures_for_scenarios[
+        'type_match_bounds_partial']
+    results_to_append.type_mismatch_bounds_partial = gold_pred_span_fixtures_for_scenarios[
+        'type_mismatch_bounds_partial']
 
     results_to_append.strict_match = generate_error_scheme_fixture()
     results_to_append.type_match = generate_error_scheme_fixture()
@@ -89,11 +37,11 @@ def test_NERResultAggregator_append_results(mocker: MockerFixture):
 
     empty_results.append_result_aggregator(results_to_append)
 
-    for errorScenario, key in zip([empty_results.type_match_span_match, empty_results.unecessary_predicted_entity,
-                                   empty_results.missed_gold_entity, empty_results.type_mismatch_span_match, empty_results.type_match_span_partial,
-                                   empty_results.type_mismatch_span_partial],
-                                  ['type_match_span_match', 'unecessary_predicted_entity', 'missed_gold_entity',
-                                   'type_mismatch_span_match', 'type_match_span_partial', 'type_mismatch_span_partial']
+    for errorScenario, key in zip([empty_results.type_match_bounds_match, empty_results.unecessary_predicted_span,
+                                   empty_results.missed_gold_span, empty_results.type_mismatch_bounds_match, empty_results.type_match_bounds_partial,
+                                   empty_results.type_mismatch_bounds_partial],
+                                  ['type_match_bounds_match', 'unecessary_predicted_span', 'missed_gold_span',
+                                   'type_mismatch_bounds_match', 'type_match_bounds_partial', 'type_mismatch_bounds_partial']
                                   ):
         # assert error scenarios
 
@@ -109,7 +57,7 @@ def test_NERResultAggregator_append_results(mocker: MockerFixture):
     TEST #2: Check if merger of result schemes work
     """
 
-    another_results_to_append = NERResultAggregator()
+    another_results_to_append = ResultAggregator()
     another_results_to_append.strict_match = generate_error_scheme_fixture()
     another_results_to_append.type_match = generate_error_scheme_fixture()
     another_results_to_append.partial_match = generate_error_scheme_fixture()
@@ -141,14 +89,14 @@ def test_NERResultAggregator_append_results(mocker: MockerFixture):
 
     assert spy.call_count==2
 
-def test_NERResultAggregator_add_type_match_span_match(mocker: MockerFixture):
-    result =  NERResultAggregator()
-    spy =  mocker.spy(result,'refresh_metrics')
-    gold = generate_random_entity_span('gold')
-    pred =  generate_random_entity_span('pred')
-    result.add_type_match_span_match(gold, pred)
+def test_ResultAggregator_add_type_match_bounds_match(mocker: MockerFixture):
+    result =  ResultAggregator()
+    spy =  mocker.spy(result,'recalculate_metrics')
+    gold = generate_random_span('gold')
+    pred =  generate_random_span('pred')
+    result.add_type_match_bounds_match(gold, pred)
 
-    assert len(result.type_match_span_match)==1
+    assert len(result.type_match_bounds_match)==1
 
     assert len(result.strict_match["correct"])==1 and sum([len(agg) if type(agg) is list else 0
                                                                     for agg in result.strict_match.values()])==1
@@ -160,13 +108,13 @@ def test_NERResultAggregator_add_type_match_span_match(mocker: MockerFixture):
                                                                     for agg in result.type_match.values()])==1
     assert spy.call_count==1
 
-def test_NERResultAggregator_add_unecessary_predicted_entity(mocker: MockerFixture):
-    result =  NERResultAggregator()
-    spy =  mocker.spy(result,'refresh_metrics')
-    pred =  generate_random_entity_span('pred')
-    result.add_unecessary_predicted_entity(pred)
+def test_ResultAggregator_add_unecessary_predicted_span(mocker: MockerFixture):
+    result =  ResultAggregator()
+    spy =  mocker.spy(result,'recalculate_metrics')
+    pred =  generate_random_span('pred')
+    result.add_unecessary_predicted_span(pred)
 
-    assert len(result.unecessary_predicted_entity)==1
+    assert len(result.unecessary_predicted_span)==1
     
     assert len(result.strict_match["spurious"])==1 and sum([len(agg) if type(agg) is list else 0
                                                                     for agg in result.strict_match.values()])==1
@@ -178,13 +126,13 @@ def test_NERResultAggregator_add_unecessary_predicted_entity(mocker: MockerFixtu
                                                                     for agg in result.type_match.values()])==1
     assert spy.call_count==1
 
-def test_NERResultAggregator_add_missed_gold_entity(mocker: MockerFixture):
-    result =  NERResultAggregator()
-    spy =  mocker.spy(result,'refresh_metrics')
-    gold =  generate_random_entity_span('gold')
-    result.add_missed_gold_entity(gold)
+def test_ResultAggregator_add_missed_gold_span(mocker: MockerFixture):
+    result =  ResultAggregator()
+    spy =  mocker.spy(result,'recalculate_metrics')
+    gold =  generate_random_span('gold')
+    result.add_missed_gold_span(gold)
 
-    assert len(result.missed_gold_entity)==1
+    assert len(result.missed_gold_span)==1
     
     assert len(result.strict_match["missed"])==1 and sum([len(agg) if type(agg) is list else 0
                                                                     for agg in result.strict_match.values()])==1
@@ -196,15 +144,15 @@ def test_NERResultAggregator_add_missed_gold_entity(mocker: MockerFixture):
                                                                     for agg in result.type_match.values()])==1
     assert spy.call_count==1
 
-def test_NERResultAggregator_add_type_mismatch_span_match(mocker: MockerFixture):
-    result =  NERResultAggregator()
-    spy =  mocker.spy(result,'refresh_metrics')
+def test_ResultAggregator_add_type_mismatch_bounds_match(mocker: MockerFixture):
+    result =  ResultAggregator()
+    spy =  mocker.spy(result,'recalculate_metrics')
 
-    gold = generate_random_entity_span('gold')
-    pred =  generate_random_entity_span('pred')
-    result.add_type_mismatch_span_match(gold, pred)
+    gold = generate_random_span('gold')
+    pred =  generate_random_span('pred')
+    result.add_type_mismatch_bounds_match(gold, pred)
 
-    assert len(result.type_mismatch_span_match)==1
+    assert len(result.type_mismatch_bounds_match)==1
     assert len(result.strict_match["incorrect"])==1 and sum([len(agg) if type(agg) is list else 0
                                                                     for agg in result.strict_match.values()])==1
     assert len(result.type_match["incorrect"])==1 and sum([len(agg) if type(agg) is list else 0
@@ -215,15 +163,15 @@ def test_NERResultAggregator_add_type_mismatch_span_match(mocker: MockerFixture)
                                                                     for agg in result.type_match.values()])==1
     assert spy.call_count==1
 
-def test_NERResultAggregator_add_type_mismatch_span_partial(mocker: MockerFixture):
-    result =  NERResultAggregator()
-    spy =  mocker.spy(result,'refresh_metrics')
+def test_ResultAggregator_add_type_mismatch_bounds_partial(mocker: MockerFixture):
+    result =  ResultAggregator()
+    spy =  mocker.spy(result,'recalculate_metrics')
 
-    gold = generate_random_entity_span('gold')
-    pred =  generate_random_entity_span('pred')
-    result.add_type_mismatch_span_partial(gold, pred)
+    gold = generate_random_span('gold')
+    pred =  generate_random_span('pred')
+    result.add_type_mismatch_bounds_partial(gold, pred)
 
-    assert len(result.type_mismatch_span_partial)==1
+    assert len(result.type_mismatch_bounds_partial)==1
     assert len(result.strict_match["incorrect"])==1 and sum([len(agg) if type(agg) is list else 0
                                                                     for agg in result.strict_match.values()])==1
     assert len(result.type_match["incorrect"])==1 and sum([len(agg) if type(agg) is list else 0
