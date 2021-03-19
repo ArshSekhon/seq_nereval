@@ -1,30 +1,16 @@
 from __future__ import annotations
-from copy import deepcopy
 from typing import List, Tuple, Dict
-from . import Span, GoldPredictedPair
+from . import Span, GoldPredictedPair, ScoreCard
 
 class ResultAggregator:
     def __init__(self):
         """
         Constructor for ResultAggregator 
         """
-        self.__metrics_template = {
-            "correct": [],
-            "incorrect": [],
-            "partial": [],
-            "missed": [],
-            "spurious": [],
-            "possible": 0,
-            "actual": 0,
-            "precision": 0,
-            "recall": 0,
-            "f1": 0,
-        }
-
-        self.strict_match = deepcopy(self.__metrics_template)
-        self.type_match = deepcopy(self.__metrics_template)
-        self.partial_match = deepcopy(self.__metrics_template)
-        self.bounds_match = deepcopy(self.__metrics_template)
+        self.strict_match = ScoreCard()
+        self.type_match = ScoreCard(is_partial_or_type_scorecard=True)
+        self.partial_match = ScoreCard(is_partial_or_type_scorecard=True)
+        self.bounds_match = ScoreCard()
 
         self.type_match_bounds_match: List[GoldPredictedPair] = []
         self.unecessary_predicted_span: List[Span] = []
@@ -36,18 +22,12 @@ class ResultAggregator:
     def summarize_result(self):
         """Summarizes the results into numbers.
         """
-        def summarize_metric(metric):
-            summary = metric.copy()
-            for key in metric.keys():
-                if type(metric[key]) is list:
-                    summary[key] = len(metric[key])
-            return summary
 
         return {
-            "strict_match": summarize_metric(self.strict_match),
-            "type_match": summarize_metric(self.type_match),
-            "partial_match": summarize_metric(self.partial_match),
-            "bounds_match": summarize_metric(self.bounds_match),
+            "strict_match": self.strict_match.get_summary(),
+            "type_match": self.type_match.get_summary(),
+            "partial_match": self.partial_match.get_summary(),
+            "bounds_match": self.bounds_match.get_summary(),
             "type_match_bounds_match": len(self.type_match_bounds_match),
             "unecessary_predicted_span": len(self.unecessary_predicted_span),
             "missed_gold_span": len(self.missed_gold_span),
@@ -56,36 +36,26 @@ class ResultAggregator:
             "type_mismatch_bounds_partial": len(self.type_mismatch_bounds_partial)
         }
 
-    def append_result_aggregator(self, otherResults: ResultAggregator) -> None:
+    def append_result_aggregator(self, otherResultAggregator: ResultAggregator) -> None:
         """Appends the results obtained from a different evaluation.
 
         Args:
-            otherResults (ResultAggregator): Result to be appended.
+            otherResultAggregator (ResultAggregator): Result to be appended.
         """
 
-        for ownResultScheme, otherResultScheme in zip(
-            [self.strict_match, self.type_match,
-                self.partial_match, self.bounds_match],
-            [otherResults.strict_match, otherResults.type_match,
-                otherResults.partial_match, otherResults.bounds_match]
-        ):
-            for metric_key in ownResultScheme.keys():
-                ownMetric = ownResultScheme[metric_key]
-                otherResultMetric = otherResultScheme[metric_key]
+        self.strict_match.mergeScoreCard(otherResultAggregator.strict_match)
+        self.type_match.mergeScoreCard(otherResultAggregator.type_match)
+        self.partial_match.mergeScoreCard(otherResultAggregator.partial_match)
+        self.bounds_match.mergeScoreCard(otherResultAggregator.bounds_match)
 
-                if type(ownMetric) is list and type(otherResultMetric) is list:
-                    ownMetric.extend(otherResultMetric)
+        self.type_match_bounds_match.extend(otherResultAggregator.type_match_bounds_match)
+        self.unecessary_predicted_span.extend(otherResultAggregator.unecessary_predicted_span)
+        self.missed_gold_span.extend(otherResultAggregator.missed_gold_span)
+        self.type_mismatch_bounds_match.extend(otherResultAggregator.type_mismatch_bounds_match)
+        self.type_match_bounds_partial.extend(otherResultAggregator.type_match_bounds_partial)
+        self.type_mismatch_bounds_partial.extend(otherResultAggregator.type_mismatch_bounds_partial)
 
-        # Merge Scenarios
-        for ownScenarios, otherScenarios in zip(
-            [self.type_match_bounds_match, self.unecessary_predicted_span, self.missed_gold_span,
-                self.type_mismatch_bounds_match, self.type_match_bounds_partial, self.type_mismatch_bounds_partial],
-            [otherResults.type_match_bounds_match, otherResults.unecessary_predicted_span, otherResults.missed_gold_span,
-                otherResults.type_mismatch_bounds_match, otherResults.type_match_bounds_partial, otherResults.type_mismatch_bounds_partial]
-        ):
-            ownScenarios.extend(otherScenarios)
-
-        self.recalculate_metrics()
+        self.recalculate_metrics_for_all_scorecards() 
 
     # Scenario I
     def add_type_match_bounds_match(self, gold_span: Span, pred_span: Span) -> None:
@@ -96,19 +66,14 @@ class ResultAggregator:
             pred_span (Span): Predicted Span.
         """
 
-        self.type_match_bounds_match.append(
-            GoldPredictedPair(gold_span, pred_span))
+        self.type_match_bounds_match.append(GoldPredictedPair(gold_span, pred_span))
 
-        self.strict_match["correct"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.type_match["correct"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.partial_match["correct"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.bounds_match["correct"].append(
-            GoldPredictedPair(gold_span, pred_span))
+        self.strict_match.correct.append(GoldPredictedPair(gold_span, pred_span))
+        self.type_match.correct.append(GoldPredictedPair(gold_span, pred_span))
+        self.partial_match.correct.append(GoldPredictedPair(gold_span, pred_span))
+        self.bounds_match.correct.append(GoldPredictedPair(gold_span, pred_span))
 
-        self.recalculate_metrics()
+        self.recalculate_metrics_for_all_scorecards()
 
     # Scenario II
 
@@ -122,12 +87,12 @@ class ResultAggregator:
 
         self.unecessary_predicted_span.append(uncessary_pred_span)
 
-        self.strict_match["spurious"].append(uncessary_pred_span)
-        self.type_match["spurious"].append(uncessary_pred_span)
-        self.partial_match["spurious"].append(uncessary_pred_span)
-        self.bounds_match["spurious"].append(uncessary_pred_span)
+        self.strict_match.spurious.append(uncessary_pred_span)
+        self.type_match.spurious.append(uncessary_pred_span)
+        self.partial_match.spurious.append(uncessary_pred_span)
+        self.bounds_match.spurious.append(uncessary_pred_span)
 
-        self.recalculate_metrics()
+        self.recalculate_metrics_for_all_scorecards()
 
     # Scenario III
     def add_missed_gold_span(self, missed_gold_span: Span) -> None:
@@ -140,12 +105,12 @@ class ResultAggregator:
 
         self.missed_gold_span.append(missed_gold_span)
 
-        self.strict_match["missed"].append(missed_gold_span)
-        self.type_match["missed"].append(missed_gold_span)
-        self.partial_match["missed"].append(missed_gold_span)
-        self.bounds_match["missed"].append(missed_gold_span)
+        self.strict_match.missed.append(missed_gold_span)
+        self.type_match.missed.append(missed_gold_span)
+        self.partial_match.missed.append(missed_gold_span)
+        self.bounds_match.missed.append(missed_gold_span)
 
-        self.recalculate_metrics()
+        self.recalculate_metrics_for_all_scorecards()
 
     # Scenario IV
     def add_type_mismatch_bounds_match(self, gold_span: Span, pred_span: Span) -> None:
@@ -159,19 +124,14 @@ class ResultAggregator:
                                             but the type was not.
         """
 
-        self.type_mismatch_bounds_match.append(
-            GoldPredictedPair(gold_span, pred_span))
+        self.type_mismatch_bounds_match.append(GoldPredictedPair(gold_span, pred_span))
 
-        self.strict_match["incorrect"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.type_match["incorrect"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.partial_match["correct"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.bounds_match["correct"].append(
-            GoldPredictedPair(gold_span, pred_span))
+        self.strict_match.incorrect.append(GoldPredictedPair(gold_span, pred_span))
+        self.type_match.incorrect.append(GoldPredictedPair(gold_span, pred_span))
+        self.partial_match.correct.append(GoldPredictedPair(gold_span, pred_span))
+        self.bounds_match.correct.append(GoldPredictedPair(gold_span, pred_span))
 
-        self.recalculate_metrics()
+        self.recalculate_metrics_for_all_scorecards()
 
     # Scenario V
     def add_type_match_bounds_partial(self, gold_span: Span, pred_span: Span) -> None:
@@ -185,19 +145,14 @@ class ResultAggregator:
                 whereas the type was predicted correctly. 
         """
 
-        self.type_match_bounds_partial.append(
-            GoldPredictedPair(gold_span, pred_span))
+        self.type_match_bounds_partial.append(GoldPredictedPair(gold_span, pred_span))
 
-        self.strict_match["incorrect"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.type_match["correct"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.partial_match["partial"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.bounds_match["incorrect"].append(
-            GoldPredictedPair(gold_span, pred_span))
+        self.strict_match.incorrect.append(GoldPredictedPair(gold_span, pred_span))
+        self.type_match.correct.append(GoldPredictedPair(gold_span, pred_span))
+        self.partial_match.partial.append(GoldPredictedPair(gold_span, pred_span))
+        self.bounds_match.incorrect.append(GoldPredictedPair(gold_span, pred_span))
 
-        self.recalculate_metrics()
+        self.recalculate_metrics_for_all_scorecards()
 
     # Scenario VI
     def add_type_mismatch_bounds_partial(self, gold_span: Span, pred_span: Span) -> None:
@@ -214,84 +169,15 @@ class ResultAggregator:
         self.type_mismatch_bounds_partial.append(
             GoldPredictedPair(gold_span, pred_span))
 
-        self.strict_match["incorrect"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.type_match["incorrect"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.partial_match["partial"].append(
-            GoldPredictedPair(gold_span, pred_span))
-        self.bounds_match["incorrect"].append(
-            GoldPredictedPair(gold_span, pred_span))
+        self.strict_match.incorrect.append(GoldPredictedPair(gold_span, pred_span))
+        self.type_match.incorrect.append(GoldPredictedPair(gold_span, pred_span))
+        self.partial_match.partial.append(GoldPredictedPair(gold_span, pred_span))
+        self.bounds_match.incorrect.append(GoldPredictedPair(gold_span, pred_span))
 
-        self.recalculate_metrics()
+        self.recalculate_metrics_for_all_scorecards()
 
-    def recalculate_metrics(self):
-        """Recalculates the metrics for the results aggregator.
+    def recalculate_metrics_for_all_scorecards(self) -> None:
+        """Recalculates the metrics for all scorecards in the results aggregator.
         """
-
-        for result_scheme in [self.strict_match, self.bounds_match]:
-            self.__compute_actual_possible(result_scheme)
-            self.__compute_precision_recall(result_scheme, False)
-
-        for result_scheme in [self.type_match, self.partial_match]:
-            self.__compute_actual_possible(result_scheme)
-            self.__compute_precision_recall(result_scheme, True)
-
-    def __compute_actual_possible(self, results):
-        """Calculates the number of the actual and possible 
-
-        Args:
-            results: the results aggregator.
-
-        Returns:
-            result dictionary with updated values of actual and possible counts.
-        """
-
-        correct = len(results["correct"])
-        incorrect = len(results["incorrect"])
-        partial = len(results["partial"])
-        missed = len(results["missed"])
-        spurious = len(results["spurious"])
-
-        possible = correct + incorrect + partial + missed
-        actual = correct + incorrect + partial + spurious
-
-        results["actual"] = actual
-        results["possible"] = possible
-
-        return results
-
-    def __compute_precision_recall(self, results, partial_or_type=False):
-        """Compute precision and recall for the results dictionary.
-
-        Args:
-            results: dictionary containing the results
-            partial_or_type (bool, optional): [description]. Defaults to False.
-
-        Returns:
-            result dictionary with updated values of precision, recall and f1 score
-                using the result aggregators.
-        """
-
-        actual = results["actual"]
-        possible = results["possible"]
-        partial = len(results["partial"])
-        correct = len(results["correct"])
-
-        if partial_or_type:
-            precision = (correct + 0.5 * partial) / actual if actual > 0 else 0
-            recall = (correct + 0.5 * partial) / \
-                possible if possible > 0 else 0
-
-        else:
-            precision = correct / actual if actual > 0 else 0
-            recall = correct / possible if possible > 0 else 0
-
-        results["precision"] = precision
-        results["recall"] = recall
-        results["f1"] = (
-            2 * (precision * recall) / (precision +
-                                        recall) if (precision + recall) > 0 else 0
-        )
-
-        return results
+        for scoreCard in [self.strict_match, self.type_match, self.partial_match, self.bounds_match]:
+            scoreCard.recalculate_metrics()

@@ -103,7 +103,7 @@ def test_ner_evaluate_missed_entity():
     predicted_entities = [[]]
     evaluator = NEREvaluator(gold_entities, predicted_entities)
     res, _ = evaluator.evaluate()
-    assert res.strict_match == {
+    assert res.strict_match.__dict__ == {
         "correct": [],
         "incorrect": [],
         "partial": [],
@@ -114,9 +114,10 @@ def test_ner_evaluate_missed_entity():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": False,
     }
 
-    assert res.type_match == {
+    assert res.type_match.__dict__ == {
         "correct": [],
         "incorrect": [],
         "partial": [],
@@ -127,9 +128,10 @@ def test_ner_evaluate_missed_entity():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.partial_match == {
+    assert res.partial_match.__dict__ == {
         "correct": [],
         "incorrect": [],
         "partial": [],
@@ -140,9 +142,10 @@ def test_ner_evaluate_missed_entity():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.bounds_match == {
+    assert res.bounds_match.__dict__ == {
         "correct": [],
         "incorrect": [],
         "partial": [],
@@ -153,6 +156,7 @@ def test_ner_evaluate_missed_entity():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": False,
     }
 
 def test_ner_evaluate_unecessary_predicted_entity():
@@ -163,7 +167,7 @@ def test_ner_evaluate_unecessary_predicted_entity():
 
     evaluator = NEREvaluator(gold_entities, predicted_entities)
     res, _ = evaluator.evaluate()
-    assert res.strict_match == {
+    assert res.strict_match.__dict__ == {
         "correct": [],
         "incorrect": [],
         "partial": [],
@@ -174,9 +178,10 @@ def test_ner_evaluate_unecessary_predicted_entity():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": False,
     }
 
-    assert res.type_match == {
+    assert res.type_match.__dict__ == {
         "correct": [],
         "incorrect": [],
         "partial": [],
@@ -187,9 +192,10 @@ def test_ner_evaluate_unecessary_predicted_entity():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.partial_match == {
+    assert res.partial_match.__dict__ == {
         "correct": [],
         "incorrect": [],
         "partial": [],
@@ -200,9 +206,10 @@ def test_ner_evaluate_unecessary_predicted_entity():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.bounds_match == {
+    assert res.bounds_match.__dict__ == {
         "correct": [],
         "incorrect": [],
         "partial": [],
@@ -213,6 +220,7 @@ def test_ner_evaluate_unecessary_predicted_entity():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": False,
     }
 
 def test_ner_evaluator_type_match_span_match_overlap():
@@ -240,7 +248,7 @@ def test_ner_evaluator_type_match_span_match_overlap():
     evaluator = NEREvaluator(gold_entities, predicted_entities)
     res, _ = evaluator.evaluate()
 
-    assert res.strict_match == {
+    assert res.strict_match.__dict__ == {
         "correct": [GoldPredictedPair(Span("LOC", 197, 205), Span("LOC", 197, 205)),
                     GoldPredictedPair(Span("LOC", 208, 219), Span("LOC", 208, 219))],
         "incorrect": [GoldPredictedPair(Span("LOC", 127, 134), Span("LOC", 124, 134)),
@@ -254,9 +262,10 @@ def test_ner_evaluator_type_match_span_match_overlap():
         "precision": 0.3333333333333333,
         "recall": 0.3333333333333333,
         "f1": 0.3333333333333333,
+        "is_partial_or_type_scorecard": False,
     }
 
-    assert res.type_match == {
+    assert res.type_match.__dict__ == {
         "correct": [GoldPredictedPair(Span("LOC", 127, 134), Span("LOC", 124, 134)),
                     GoldPredictedPair(Span("LOC", 197, 205), Span("LOC", 197, 205)),
                     GoldPredictedPair(Span("LOC", 208, 219), Span("LOC", 208, 219))],
@@ -270,9 +279,10 @@ def test_ner_evaluator_type_match_span_match_overlap():
         "precision": 0.5,
         "recall": 0.5,
         "f1": 0.5,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.partial_match == {
+    assert res.partial_match.__dict__ == {
         "correct": [GoldPredictedPair(Span("LOC", 164, 174), Span("PER", 164, 174)),
                     GoldPredictedPair(Span("LOC", 197, 205), Span("LOC", 197, 205)),
                     GoldPredictedPair(Span("LOC", 208, 219), Span("LOC", 208, 219))],
@@ -286,9 +296,10 @@ def test_ner_evaluator_type_match_span_match_overlap():
         "precision": 0.66666666666666665,
         "recall": 0.6666666666666666,
         "f1": 0.6666666666666666,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.bounds_match == {
+    assert res.bounds_match.__dict__ == {
         "correct": [GoldPredictedPair(Span("LOC", 164, 174), Span("PER", 164, 174)),
                     GoldPredictedPair(Span("LOC", 197, 205), Span("LOC", 197, 205)),
                     GoldPredictedPair(Span("LOC", 208, 219), Span("LOC", 208, 219))],
@@ -302,6 +313,7 @@ def test_ner_evaluator_type_match_span_match_overlap():
         "precision": 0.5,
         "recall": 0.5,
         "f1": 0.5,
+        "is_partial_or_type_scorecard": False,
     }
 
 def test_ner_evaluator_type_match_span_overlap():
@@ -319,7 +331,7 @@ def test_ner_evaluator_type_match_span_overlap():
     evaluator = NEREvaluator(gold_entities, predicted_entities)
     res, _ = evaluator.evaluate()
 
-    assert res.strict_match == {
+    assert res.strict_match.__dict__ == {
         "correct": [],
         "incorrect": [GoldPredictedPair(Span("PER", 29, 69), Span("PER", 24, 30))],
         "partial": [],
@@ -330,9 +342,10 @@ def test_ner_evaluator_type_match_span_overlap():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": False,
     }
 
-    assert res.type_match == {
+    assert res.type_match.__dict__ == {
         "correct": [GoldPredictedPair(Span("PER", 29, 69), Span("PER", 24, 30))],
         "incorrect": [],
         "partial": [],
@@ -343,9 +356,10 @@ def test_ner_evaluator_type_match_span_overlap():
         "precision": 1,
         "recall": 1,
         "f1": 1,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.partial_match == {
+    assert res.partial_match.__dict__ == {
         "correct": [],
         "incorrect": [],
         "partial": [GoldPredictedPair(Span("PER", 29, 69), Span("PER", 24, 30))],
@@ -356,9 +370,10 @@ def test_ner_evaluator_type_match_span_overlap():
         "precision": 0.5,
         "recall": 0.5,
         "f1": 0.5,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.bounds_match == {
+    assert res.bounds_match.__dict__ == {
         "correct": [],
         "incorrect": [GoldPredictedPair(Span("PER", 29, 69), Span("PER", 24, 30))],
         "partial": [],
@@ -369,6 +384,7 @@ def test_ner_evaluator_type_match_span_overlap():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": False,
     }
  
 def test_ner_evaluator_type_mismatch_span_exact():
@@ -386,7 +402,7 @@ def test_ner_evaluator_type_mismatch_span_exact():
     evaluator = NEREvaluator(gold_entities, predicted_entities)
     res, _ = evaluator.evaluate()
 
-    assert res.strict_match == {
+    assert res.strict_match.__dict__ == {
         "correct": [],
         "incorrect": [GoldPredictedPair(Span("LOC", 24, 30), Span("PER", 24, 30))],
         "partial": [],
@@ -397,9 +413,10 @@ def test_ner_evaluator_type_mismatch_span_exact():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": False,
     }
 
-    assert res.type_match == {
+    assert res.type_match.__dict__ == {
         "correct": [],
         "incorrect": [GoldPredictedPair(Span("LOC", 24, 30), Span("PER", 24, 30))],
         "partial": [],
@@ -410,9 +427,10 @@ def test_ner_evaluator_type_mismatch_span_exact():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.partial_match == {
+    assert res.partial_match.__dict__ == {
         "correct": [GoldPredictedPair(Span("LOC", 24, 30), Span("PER", 24, 30))],
         "incorrect": [],
         "partial": [],
@@ -423,9 +441,10 @@ def test_ner_evaluator_type_mismatch_span_exact():
         "precision": 1,
         "recall": 1,
         "f1": 1,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.bounds_match == {
+    assert res.bounds_match.__dict__ == {
         "correct": [GoldPredictedPair(Span("LOC", 24, 30), Span("PER", 24, 30))],
         "incorrect": [],
         "partial": [],
@@ -436,6 +455,7 @@ def test_ner_evaluator_type_mismatch_span_exact():
         "precision": 1,
         "recall": 1,
         "f1": 1,
+        "is_partial_or_type_scorecard": False,
     }
 
 def test_ner_evaluator_type_mismatch_span_partial():
@@ -453,7 +473,7 @@ def test_ner_evaluator_type_mismatch_span_partial():
     evaluator = NEREvaluator(gold_entities, predicted_entities)
     res, _ = evaluator.evaluate()
 
-    assert res.strict_match == {
+    assert res.strict_match.__dict__ == {
         "correct": [],
         "incorrect": [GoldPredictedPair(Span("LOC", 21, 26), Span("PER", 24, 30))],
         "partial": [],
@@ -464,9 +484,10 @@ def test_ner_evaluator_type_mismatch_span_partial():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": False,
     }
 
-    assert res.type_match == {
+    assert res.type_match.__dict__ == {
         "correct": [],
         "incorrect": [GoldPredictedPair(Span("LOC", 21, 26), Span("PER", 24, 30))],
         "partial": [],
@@ -477,9 +498,10 @@ def test_ner_evaluator_type_mismatch_span_partial():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.partial_match == {
+    assert res.partial_match.__dict__ == {
         "correct": [],
         "incorrect": [],
         "partial": [GoldPredictedPair(Span("LOC", 21, 26), Span("PER", 24, 30))],
@@ -490,9 +512,10 @@ def test_ner_evaluator_type_mismatch_span_partial():
         "precision": 0.5,
         "recall": 0.5,
         "f1": 0.5,
+        "is_partial_or_type_scorecard": True,
     }
 
-    assert res.bounds_match == {
+    assert res.bounds_match.__dict__ == {
         "correct": [],
         "incorrect": [GoldPredictedPair(Span("LOC", 21, 26), Span("PER", 24, 30))],
         "partial": [],
@@ -503,6 +526,7 @@ def test_ner_evaluator_type_mismatch_span_partial():
         "precision": 0,
         "recall": 0,
         "f1": 0,
+        "is_partial_or_type_scorecard": False,
     }
 
 def test_ner_evaluator_summarize_results():
