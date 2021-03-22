@@ -68,4 +68,15 @@ class Span:
         """
 
         return max(self.start_idx, otherSpan.start_idx) <= min(self.end_idx, otherSpan.end_idx)
+    
+    def ends_after_end_of(self, otherSpan):
+        return self.end_idx > otherSpan.end_idx
 
+    def starts_before_start_of(self, otherSpan):
+        return self.start_idx < otherSpan.start_idx
+
+    def starts_after_end_of(self, otherSpan):
+        return self.start_idx > otherSpan.end_idx
+
+    def ends_before_start_of(self, otherSpan):
+        return self.end_idx < otherSpan.start_idx

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .models import ResultAggregator, Span
 from collections import defaultdict
 from typing import List, Tuple
