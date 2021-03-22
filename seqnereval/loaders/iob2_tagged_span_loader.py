@@ -4,8 +4,8 @@ from . import IOBTaggedSpanLoader
 from ..models import Span
 
 class IOB2TaggedSpanLoader(IOBTaggedSpanLoader):
-    def __init__(self, tokens: List[str], tags: List[str], entity_context_padding:int = 2):
-        super().__init__(tokens, tags, entity_context_padding)
+    def __init__(self, tokens: List[str], tags: List[str], context_padding:int = 2):
+        super().__init__(tokens, tags, context_padding)
 
         self.start_prefix: str = 'B'
         self.inside_prefix: str = 'I'

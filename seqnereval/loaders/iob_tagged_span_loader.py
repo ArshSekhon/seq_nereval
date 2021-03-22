@@ -4,8 +4,8 @@ from .tagged_span_loader import TaggedSpanLoader
 from ..models import Span
 
 class IOBTaggedSpanLoader(TaggedSpanLoader):
-    def __init__(self, tokens: List[str], tags: List[str], entity_context_padding:int = 2):
-        super().__init__(tokens, tags)
+    def __init__(self, tokens: List[str], tags: List[str], context_padding:int = 2):
+        super().__init__(tokens, tags, context_padding)
 
         if(len(tokens)!=len(tags)):
             raise Exception(f'Number of tokens and tags is not the same.')
@@ -13,8 +13,6 @@ class IOBTaggedSpanLoader(TaggedSpanLoader):
         self.start_prefix: str = 'B'
         self.inside_prefix: str = 'I'
         self.outside_tag: str = 'O'
-
-        self.entity_context_padding: int  = entity_context_padding
 
         self.valid_token_tag_prefix = set([self.start_prefix, 
                                             self.inside_prefix, 
@@ -85,8 +83,8 @@ class IOBTaggedSpanLoader(TaggedSpanLoader):
         return self.tokens[start_idx:stop_idx]
 
     def get_tokens_with_context_tokens(self, start_idx, stop_idx) -> List[str]: 
-        context_start_idx = max(0, start_idx-self.entity_context_padding)
-        context_stop_idx = min(stop_idx+self.entity_context_padding, len(self.tokens))
+        context_start_idx = max(0, start_idx-self.context_padding)
+        context_stop_idx = min(stop_idx+self.context_padding, len(self.tokens))
         return self.tokens[context_start_idx:context_stop_idx]
 
     def reset_spans_aggregator(self):
