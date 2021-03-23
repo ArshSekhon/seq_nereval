@@ -1,14 +1,15 @@
+from __future__ import annotations
 from ..models import ResultAggregator, Span
 from ..loaders import TaggedSpanLoader, IOBTaggedSpanLoader, IOB2TaggedSpanLoader, BIOESTaggedSpanLoader, BILOUTaggedSpanLoader
 from . import CorpusEvaluator
 
-from __future__ import annotations
+
 from collections import defaultdict
 from typing import List, Tuple
 from enum import Enum
 
 class SeqTaggedCorpusEvaluator(CorpusEvaluator):
-    class SupportedFormats:
+    class SupportedFormats(Enum):
         iob = 'IOB'
         iob2 = 'IOB2'
         bioes = 'BIOES'

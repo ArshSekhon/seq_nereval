@@ -135,10 +135,10 @@ class DocumentEvaluator:
         self.results_grouped_by_tags[gold.span_type].add_type_mismatch_bounds_partial(gold, predicted)
 
     def __validate_gold_and_predicted_spans(self):
-        if self.__do_spans_overlap(self.gold_spans):
+        if self.__do_any_spans_overlap(self.gold_spans):
             raise Exception("Overlapping Gold Spans found: Overlapping spans are not currently supported.")
 
-        if self.__do_spans_overlap(self.predicted_spans):
+        if self.__do_any_spans_overlap(self.predicted_spans):
             raise Exception("Overlapping Predicted Spans found: Overlapping spans are not currently supported.")
 
     def __report_remaining_gold_spans_as_missed(self):
@@ -167,7 +167,7 @@ class DocumentEvaluator:
         self.gold_spans.sort(lambda span: (span.start_idx, span.end_idx))
         self.predicted_spans.sort(lambda span: (span.start_idx, span.end_idx))
  
-    def __do_spans_overlap(self, spans:List[Span]):
+    def __do_any_spans_overlap(self, spans:List[Span]):
         spans = sorted(spans, lambda span: (span.start_idx, span.end_idx))
         prev_span_end = None
         
