@@ -21,8 +21,11 @@ class Span:
         """
 
         self.span_type = span_type 
+
+        self.__validate_start_end(start_idx, end_idx)
         self.start_idx = start_idx
         self.end_idx = end_idx
+
         self.spanned_tokens = spanned_tokens
         if span_context == None:
             self.span_context = self.spanned_tokens
@@ -80,3 +83,7 @@ class Span:
 
     def ends_before_start_of(self, otherSpan):
         return self.end_idx < otherSpan.start_idx
+
+    def __validate_start_end(self, start_idx, end_idx)->None:
+        if start_idx>end_idx:
+            raise Exception('Start IDX for a span cannot be > End IDX.')

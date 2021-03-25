@@ -54,9 +54,10 @@ class IOBTaggedSpanLoader(TaggedSpanLoader):
 
 
     def initiate_construction_of_new_span(self, start_idx) -> None:
+        # temporarily create a span with same start and end idx, end idx can be modified later
         self.open_span_under_construction =  Span(self.get_label_for_tag_at(start_idx), 
                                                     start_idx, 
-                                                    None)
+                                                    start_idx)
 
     def close_span_under_construction_and_save_span(self, stop_idx) -> None:
         start_idx =  self.open_span_under_construction.start_idx

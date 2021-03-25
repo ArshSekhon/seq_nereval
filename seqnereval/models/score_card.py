@@ -28,11 +28,11 @@ class ScoreCard:
     def get_summary(self) -> Dict[str, int]:
         return {
             **self.get_score_counts(),
-            "possible": 0,
-            "actual": 0,
-            "precision": 0,
-            "recall": 0,
-            "f1": 0,
+            "possible": self.possible,
+            "actual": self.actual,
+            "precision": self.precision,
+            "recall": self.recall,
+            "f1": self.f1,
         }
 
     def __compute_actual_possible(self) -> None:
@@ -76,7 +76,7 @@ class ScoreCard:
                                                   self.recall) if (self.precision + self.recall) > 0 else 0
         )
 
-    def mergeScoreCard(self, scoreCardToMerge: ScoreCard) -> None:
+    def appendScoreCard(self, scoreCardToMerge: ScoreCard) -> None:
         """Merges other scorecard into self.
 
         Args:

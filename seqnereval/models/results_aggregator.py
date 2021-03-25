@@ -43,10 +43,10 @@ class ResultAggregator:
             otherResultAggregator (ResultAggregator): Result to be appended.
         """
 
-        self.strict_match.mergeScoreCard(otherResultAggregator.strict_match)
-        self.type_match.mergeScoreCard(otherResultAggregator.type_match)
-        self.partial_match.mergeScoreCard(otherResultAggregator.partial_match)
-        self.bounds_match.mergeScoreCard(otherResultAggregator.bounds_match)
+        self.strict_match.appendScoreCard(otherResultAggregator.strict_match)
+        self.type_match.appendScoreCard(otherResultAggregator.type_match)
+        self.partial_match.appendScoreCard(otherResultAggregator.partial_match)
+        self.bounds_match.appendScoreCard(otherResultAggregator.bounds_match)
 
         self.type_match_bounds_match.extend(otherResultAggregator.type_match_bounds_match)
         self.unecessary_predicted_span.extend(otherResultAggregator.unecessary_predicted_span)
