@@ -39,6 +39,6 @@ def test_seq_tagged_corpus_evaluator__init__validation():
     assert str(validation_exception.value)==('SeqTaggedCorpusEvaluator creation failed.'
             ' predicted_tags_grouped_by_docs is not a 2D List. Please pass a 2-D List into the'
             ' constructor containing predicted spans grouped by docs.')
-@mock.patch()
+
 def test_seq_tagged_corpus_evaluator__init__(mocker:MockerFixture):
     pass
