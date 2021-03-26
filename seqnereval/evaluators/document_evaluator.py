@@ -14,8 +14,8 @@ class DocumentEvaluator:
         self.__validate_gold_and_predicted_spans()
         self.__sort_gold_and_predicted_spans()
 
-        self.results = ResultAggregator()
-        self.results_grouped_by_tags = defaultdict(lambda: ResultAggregator())
+        self.__result = None
+        self.__results_grouped_by_tags = None
 
 
         # temporary variables to be used during evaluation
@@ -98,37 +98,48 @@ class DocumentEvaluator:
         # if any predicted spans are left behind repor them as unwanted
         self.__report_remaining_predicted_spans_as_unwanted()
 
-        return self.results, self.results_grouped_by_tags
+        return self.__result, self.__results_grouped_by_tags
     
+    
+    def get_result(self):
+        if self.__result==None:
+            raise Exception('Evaluation has not been performed yet. Please call evaluate() before retrieving results.')
+        return self.__result
+
+    def get_results_grouped_by_tags(self):
+        if self.__results_grouped_by_tags==None:
+            raise Exception('Evaluation has not been performed yet. Please call evaluate() before retrieving results.')
+        return self.__results_grouped_by_tags
+
     def __report_type_match_bounds_match(self, gold: Span, predicted: Span) -> None:
         # Scenario I: Both entity type/labels and spans match perfectly
-        self.results.add_type_match_bounds_match(gold, predicted)
-        self.results_grouped_by_tags[gold.span_type].add_type_match_bounds_match(gold, predicted)
+        self.__result.add_type_match_bounds_match(gold, predicted)
+        self.__results_grouped_by_tags[gold.span_type].add_type_match_bounds_match(gold, predicted)
     
     def __report_unwanted_span(self, span: Span)->None:
         # Scenario II system hypothesised an extra entity
-        self.results.add_unecessary_predicted_span(span)
-        self.results_grouped_by_tags[span.span_type].add_unecessary_predicted_span(span)
+        self.__result.add_unecessary_predicted_span(span)
+        self.__results_grouped_by_tags[span.span_type].add_unecessary_predicted_span(span)
 
     def __report_missed_span(self, span: Span)->None:
         # Scenario III system missed an entity
-        self.results.add_missed_gold_span(span)
-        self.results_grouped_by_tags[span.span_type].add_missed_gold_span(span)
+        self.__result.add_missed_gold_span(span)
+        self.__results_grouped_by_tags[span.span_type].add_missed_gold_span(span)
 
     def __report_type_mismatch_bounds_match(self, gold: Span, predicted: Span)-> None:
         # Scenario IV: Wrong Entity types but, spans match perfectly
-        self.results.add_type_mismatch_bounds_match(gold, predicted)
-        self.results_grouped_by_tags[gold.span_type].add_type_mismatch_bounds_match(gold, predicted)
+        self.__result.add_type_mismatch_bounds_match(gold, predicted)
+        self.__results_grouped_by_tags[gold.span_type].add_type_mismatch_bounds_match(gold, predicted)
     
     def __report_type_match_bounds_overlap(self, gold: Span, predicted: Span) -> None:
         # Scenario V: Correct Entity Type, partial span overlap
-        self.results.add_type_match_bounds_partial(gold, predicted)
-        self.results_grouped_by_tags[gold.span_type].add_type_match_bounds_partial(gold, predicted)
+        self.__result.add_type_match_bounds_partial(gold, predicted)
+        self.__results_grouped_by_tags[gold.span_type].add_type_match_bounds_partial(gold, predicted)
     
     def __report_type_mismatch_bounds_overlap(self, gold: Span, predicted: Span) -> None:
         # Scenario VI: Wrong Entity Type, partial span overlap
-        self.results.add_type_mismatch_bounds_partial(gold, predicted)
-        self.results_grouped_by_tags[gold.span_type].add_type_mismatch_bounds_partial(gold, predicted)
+        self.__result.add_type_mismatch_bounds_partial(gold, predicted)
+        self.__results_grouped_by_tags[gold.span_type].add_type_mismatch_bounds_partial(gold, predicted)
 
     def __validate_gold_and_predicted_spans(self):
         if self.__do_any_spans_overlap(self.gold_spans):
@@ -169,7 +180,6 @@ class DocumentEvaluator:
         
         for span in spans:
             if prev_span_end is not None and span.start_idx<=prev_span_end:
-                print(prev_span_end, span.start_idx)
                 return True
             prev_span_end = span.end_idx
         
@@ -182,5 +192,5 @@ class DocumentEvaluator:
         self.__gold_span_overlap_in_last_step = False
         self.__predicted_span_overlap_in_last_step = False
 
-        self.results = ResultAggregator()
-        self.results_grouped_by_tags = defaultdict(lambda: ResultAggregator())
+        self.__result = ResultAggregator()
+        self.__results_grouped_by_tags = defaultdict(lambda: ResultAggregator())

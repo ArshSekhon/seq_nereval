@@ -36,7 +36,6 @@ class SeqTaggedCorpusEvaluator(CorpusEvaluator):
                  format_of_tags: SeqTaggedCorpusEvaluator.SupportedFormats,
                  context_padding=0):
         """Constructor for SeqTaggedCorpusEvaluator
-
         Args:
             tokens_grouped_by_docs (List[List[str]]): Lists of tokens grouped by documents.
             gold_tags_grouped_by_docs (List[List[str]]): Lists of golden tags grouped by documents.
