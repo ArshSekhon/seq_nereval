@@ -14,7 +14,7 @@ class CorpusEvaluator:
             gold_entity_spans_grouped_by_doc (List[List[Span]]): List of gold spans grouped by documents.
             pred_spans_grouped_by_doc (List[List[Span]]): List of predicted spans grouped by documents.
         """
-
+        # TODO: Check dimension of the list
         if len(gold_spans_grouped_by_doc) != len(pred_spans_grouped_by_doc):
             raise Exception(f'# of documents for which golden tags were provided {len(gold_spans_grouped_by_doc)}'
                             f'!= # of documents for which predicted tags were provided {len(pred_spans_grouped_by_doc)}')
@@ -35,7 +35,6 @@ class CorpusEvaluator:
         for gold_spans, pred_spans in zip(self.gold_spans_grouped_by_doc, self.pred_spans_grouped_by_docs):
             document_evaluator = DocumentEvaluator(gold_spans, pred_spans)
             results_for_curr_doc, results_for_curr_doc_grouped_by_tags = document_evaluator.evaluate()
-
             self.__save_results_for_doc(results_for_curr_doc, results_for_curr_doc_grouped_by_tags)
 
 

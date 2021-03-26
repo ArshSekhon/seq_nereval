@@ -1,6 +1,12 @@
 from __future__ import annotations
 from ..models import ResultAggregator, Span
-from ..loaders import TaggedSpanLoader, IOBTaggedSpanLoader, IOB2TaggedSpanLoader, BIOESTaggedSpanLoader, BILOUTaggedSpanLoader
+from ..loaders import (
+    TaggedSpanLoader, 
+    IOBTaggedSpanLoader, 
+    IOB2TaggedSpanLoader, 
+    BIOESTaggedSpanLoader, 
+    BILOUTaggedSpanLoader
+)
 from . import CorpusEvaluator
 
 
@@ -71,7 +77,7 @@ class SeqTaggedCorpusEvaluator(CorpusEvaluator):
         results = []
         Loader: TaggedSpanLoader = SeqTaggedCorpusEvaluator.loader_mapping[self.format_of_tags]
         for tags_for_a_doc, tokens_for_a_doc in zip(tags_grouped_by_docs, tokens_grouped_by_docs):
-            loader = Loader(tags_for_a_doc, tokens_for_a_doc,
+            loader = Loader(tokens_for_a_doc, tags_for_a_doc,
                             self.context_padding)
             results.append(loader.retreive_spans())
         return results

@@ -1,6 +1,6 @@
 import pytest
 from seqnereval.models import Span
-from ..fixtures import generate_random_span_list
+from ..fixtures import generate_non_overlapping_span_list
 
 def test_span__init__():
     # Scenario 1
@@ -15,7 +15,7 @@ def test_span__init__():
     assert span.span_context == None
     
     # Scenario 2
-    tokens = generate_random_span_list('token', 10)
+    tokens = generate_non_overlapping_span_list('token', 10)
     span = Span('tag', 10, 20, tokens)
 
     # assert assigned value
@@ -24,8 +24,8 @@ def test_span__init__():
     assert span.span_context == span.spanned_tokens
 
     # Scenario 3
-    tokens = generate_random_span_list('token', 10)
-    context_tokens = generate_random_span_list('token', 20)
+    tokens = generate_non_overlapping_span_list('token', 10)
+    context_tokens = generate_non_overlapping_span_list('token', 20)
     span = Span('tag', 10, 20, tokens, context_tokens)
 
     # assert assigned value

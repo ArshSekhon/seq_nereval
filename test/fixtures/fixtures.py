@@ -5,15 +5,15 @@ from seqnereval.models import ScoreCard
 
 # TODO: split fixtures into separate files
 
-def generate_random_span(token_placeholder: str):
-    start_idx = random.randint(1, 1000)
-    end_idx =  random.randint(start_idx, 1000)
-    return Span(token_placeholder, start_idx, end_idx)
+def generate_random_span(type_placeholder: str, min_idx:int = 1, max_idx: int = 1000):
+    start_idx = random.randint(min_idx, max_idx)
+    end_idx =  random.randint(start_idx, max_idx)
+    return Span(type_placeholder, start_idx, end_idx)
 
-def generate_random_span_list(token_placeholder: str, count: int) -> List:
+def generate_non_overlapping_span_list(type_placeholder: str, count: int) -> List:
     return [
-        generate_random_span(token_placeholder)
-        for _ in range(count)
+        Span(type_placeholder, idx, idx)
+        for idx in range(1,count)
     ]
 
 
@@ -21,8 +21,8 @@ def generate_random_gold_pred_span_pairs(maxCount: int):
     random_length = random.randint(1, maxCount)
     result = []
     for gold, pred in list(zip(
-        generate_random_span_list('gold', random_length), 
-        generate_random_span_list('pred', random_length))):
+        generate_non_overlapping_span_list('gold', random_length), 
+        generate_non_overlapping_span_list('pred', random_length))):
 
         result.append(GoldPredictedPair(gold, pred))
 

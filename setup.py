@@ -29,7 +29,7 @@ setup(
     author=about["__author__"],
     author_email=about["__author_email__"],
     license=about["__license__"],
-    packages=["seqnereval"],
+    packages=["seqnereval", "seqnereval.loaders", "seqnereval.models", "seqnereval.evaluators"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",

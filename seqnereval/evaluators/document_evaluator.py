@@ -3,14 +3,11 @@ from typing import List, Tuple, Dict
 from collections import defaultdict
 
 from ..models import Span, ResultAggregator
+import pprint
 
 class DocumentEvaluator:
     def __init__(self, gold_spans: List[Span], predicted_spans: List[Span]):
         
-        if len(gold_spans) != len(predicted_spans):
-            raise Exception(f'# of golden tags ({len(gold_spans)}) for the document'
-                            f'!= # of predicted tags ({len(predicted_spans)}) for the document.')
-
         self.gold_spans = gold_spans
         self.predicted_spans = predicted_spans
         
@@ -63,12 +60,12 @@ class DocumentEvaluator:
                 else:
                     self.__report_type_mismatch_bounds_overlap(current_gold_span, current_gold_span)
 
-                if current_predicted_span.ends_after(current_gold_span):
+                if current_predicted_span.ends_after_end_of(current_gold_span):
                     # only increment gold cursor as there could be future overlaps for predicted span
                     self.__predicted_span_overlap_in_last_step = True
                     self.__gold_spans_cursor += 1
 
-                elif current_gold_span.ends_after(current_predicted_span):
+                elif current_gold_span.ends_after_end_of(current_predicted_span):
                     self.__gold_span_overlap_in_last_step = True
                     self.__predicted_spans_cursor += 1
 
@@ -89,8 +86,7 @@ class DocumentEvaluator:
                     self.__gold_spans_cursor += 1
                     self.__gold_span_overlap_in_last_step = False
                 
-                elif current_predicted_span.ends_before_start_of(current_predicted_span):
-                    
+                elif current_predicted_span.ends_before_start_of(current_gold_span):
                     if not self.__predicted_span_overlap_in_last_step:
                         self.__report_unwanted_span(current_predicted_span)
                     
@@ -164,15 +160,16 @@ class DocumentEvaluator:
             self.__predicted_spans_cursor += 1
 
     def __sort_gold_and_predicted_spans(self):
-        self.gold_spans.sort(lambda span: (span.start_idx, span.end_idx))
-        self.predicted_spans.sort(lambda span: (span.start_idx, span.end_idx))
+        self.gold_spans.sort(key=lambda span: (span.start_idx, span.end_idx))
+        self.predicted_spans.sort(key=lambda span: (span.start_idx, span.end_idx))
  
     def __do_any_spans_overlap(self, spans:List[Span]):
-        spans = sorted(spans, lambda span: (span.start_idx, span.end_idx))
+        spans = sorted(spans, key=lambda span: (span.start_idx, span.end_idx))
         prev_span_end = None
         
         for span in spans:
             if prev_span_end is not None and span.start_idx<=prev_span_end:
+                print(prev_span_end, span.start_idx)
                 return True
             prev_span_end = span.end_idx
         
