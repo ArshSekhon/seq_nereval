@@ -3,9 +3,8 @@ from typing import List, Tuple, Dict
 from collections import defaultdict
 
 from ..models import Span, ResultAggregator
-import pprint
 
-class DocumentEvaluator:
+class Evaluator:
     def __init__(self, gold_spans: List[Span], predicted_spans: List[Span]):
         
         self.gold_spans = gold_spans
@@ -58,7 +57,7 @@ class DocumentEvaluator:
                 if current_gold_span.span_type == current_predicted_span.span_type:
                     self.__report_type_match_bounds_overlap(current_gold_span, current_predicted_span)
                 else:
-                    self.__report_type_mismatch_bounds_overlap(current_gold_span, current_gold_span)
+                    self.__report_type_mismatch_bounds_overlap(current_gold_span, current_predicted_span)
 
                 if current_predicted_span.ends_after_end_of(current_gold_span):
                     # only increment gold cursor as there could be future overlaps for predicted span
@@ -97,8 +96,6 @@ class DocumentEvaluator:
         self.__report_remaining_gold_spans_as_missed()
         # if any predicted spans are left behind repor them as unwanted
         self.__report_remaining_predicted_spans_as_unwanted()
-
-        return self.__result, self.__results_grouped_by_tags
     
     
     def get_result(self):

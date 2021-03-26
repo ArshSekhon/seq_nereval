@@ -1,3 +1,2 @@
-from .document_evaluator import DocumentEvaluator
-from .corpus_evaluator  import CorpusEvaluator
-from .seq_tagged_corpus_evaluator import SeqTaggedCorpusEvaluator
+from .evaluator import Evaluator
+from .tagged_seq_evaluator import TaggedSeqEvaluator
